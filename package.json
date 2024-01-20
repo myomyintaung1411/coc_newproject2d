@@ -1,0 +1,10 @@
+{
+  "name": "NewProject2d",
+  "uuid": "503f5071-1417-4eda-9b99-628663026659",
+  "creator": {
+    "version": "3.8.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.5"
+  }
+}
