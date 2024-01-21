@@ -105,7 +105,7 @@ export class HttpUtil {
     /** 延迟多久没回复就返回False */
     private static TimeOut: number = 5000;
     /** 连接服务器地址 */
-    public static ServerURL: string = "http://192.168.99.112:1126/";
+    public static ServerURL: string = "https://pc2.th371.com/";
 
     /**
      * GET请求

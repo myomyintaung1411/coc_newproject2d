@@ -1,4 +1,4 @@
-import { _decorator, Component, EditBox, JsonAsset, Node, sys } from 'cc';
+import { _decorator, Component, EditBox, JsonAsset, Node } from 'cc';
 import { PopupManager } from '../popup/manager/PopupManager';
 import { md5 } from '../util/Md5';
 import { PopupBase } from '../popup/base/PopupBase';
@@ -6,7 +6,6 @@ import { EncryptUtil } from '../util/EncryptUtil';
 import { Toast } from '../ui/Toast';
 import { ToastManager } from '../ui/ToastManager';
 import { SqlUtil } from '../util/SqlUtil';
-import PomeloClient__ from '../util/test_pomelo';
 
 const { ccclass, property } = _decorator;
 
@@ -15,7 +14,7 @@ export class LoginScript extends Component {
     @property(EditBox)  m_Account : EditBox = null!;
     @property(EditBox)  m_Password : EditBox = null!;
     start() {
-      
+
     }
 
     update(deltaTime: number) {
@@ -24,7 +23,7 @@ export class LoginScript extends Component {
 
     async postData(url: string, data: any) {
         try {
-            const response = await fetch(url + 'opt', {
+            const response = await fetch(url + '/v1/signIn', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -41,7 +40,6 @@ export class LoginScript extends Component {
     
             const result = await response.json();
             console.log('API response:', result);
-            return result
             // Handle the API response here
     
         } catch (error) {
@@ -56,28 +54,27 @@ export class LoginScript extends Component {
       
 
     async onclickLogin() {
-        let url  = 'https://pc2.th371.com/conn3/'
+        let url  = 'https://pc2.th371.com/'
         console.log(this.m_Account.string, this.m_Password.string, "sdfsdf");
-        let accountName = this.m_Account.getComponent(EditBox).string;
-        let passwordName = this.m_Password.getComponent(EditBox).string;
-        accountName = '79989911'
-        passwordName = '123aaa'
-       if(accountName == '' || passwordName == '') return ToastManager.instance.showToast("Please Enter all Section")
-        const md5_pass = md5(passwordName)
-        const data = "01;"+accountName+";"+md5_pass+";"+"windows"+";1"; //data: 01;79989933;d78ff0ef526543e2174540afdfea0154;windows;1
-       const resp =   await this.postData(url, {data:data});
-       let userInfo = null
-       if(resp.code == 200){
-        userInfo = resp.data;
+        const accountName = this.m_Account.getComponent(EditBox).string;
+        const passwordName = this.m_Password.getComponent(EditBox).string;
         
-       }
-       userInfo.userType = 1
-       SqlUtil.set('userinfo',JSON.stringify(userInfo))
-      const pomeloConn = new PomeloClient__()
-       pomeloConn.conn(res=> {
-        console.log(res,"ddddddddddddd")
-       })
-       console.log(resp,"esppppppppppppp")
+       if(accountName == '' || passwordName == '') return ToastManager.instance.showToast("Please Enter all Section")
+      
+        const data = {
+            username: accountName,
+            password:  md5(passwordName),
+            terminal: "jk",
+        };
+        // let enc =  JSON.parse(JSON.stringify(data))
+        // let encyrpt = EncryptUtil.aesEncrypt((JSON.stringify(enc)),`@hKe9@A1lKe9$Tz1kE@8HnG7`,`1234567890123456`)
+        // console.log(encyrpt,"encrypt")
+        // const decrypt = JSON.parse(EncryptUtil.aesDecrypt(encyrpt,`@hKe9@A1lKe9$Tz1kE@8HnG7`,`1234567890123456`))
+        // console.log(decrypt,"decrypt")
+       let _store = JSON.stringify(data)
+        SqlUtil.set('test',_store)
+        console.log(SqlUtil.get('test'))
+        await this.postData(url, data);
     }
 
     onLoginComplete(rev:any, param:any) {

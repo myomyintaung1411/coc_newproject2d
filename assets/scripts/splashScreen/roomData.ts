@@ -53,6 +53,7 @@ export class roomData extends Component {
                     labelComponent.string = this.roadmapItem[data].name;
                 }
             }
+            
             //item[data].addChild(labeTxt)
             this.scrollViewMain.content.addChild(item)
         }
