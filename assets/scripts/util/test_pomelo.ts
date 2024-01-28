@@ -1,24 +1,36 @@
-import { EventTarget, SystemEvent, director, systemEvent } from "cc";
+import { EventTarget, director } from "cc";
 import { SqlUtil } from "./SqlUtil";
 import { EncryptUtil } from "./EncryptUtil";
-
+import './pomelo.js'
+import { globalEventTarget } from './GlobalEventTarget'; // Adjust the path as needed
 class PomeloClient__ {
+  static _instance: PomeloClient__;
+
     private nHeartBeat = 0;
     private s_timer:  any = null;
     private interval:  any = null;
     private isConn = true;
     private kickk = false;
     private reconnet_success = false;
-    private p_server: any = window.pomelo;
-    private p_server2: any = window.pomelo;
+     
+
+    private  p_server: any = window.pomelo
+    private  p_server2: any = window.pomelo
     private n: any = 0
 
     private eventTarget: EventTarget = new EventTarget();
 
-  
     constructor() {
       this.initListeners();
     }
+    static getInstance(): PomeloClient__ {
+      if (this._instance == null) {
+          this._instance = new PomeloClient__();
+      }
+      return this._instance;
+  }
+  
+
   
     private initListeners() {
       this.p_server2.on('close', (e: any) => this.handleClose(e));
@@ -66,6 +78,11 @@ class PomeloClient__ {
   
     private kick() {
         console.log("kick")
+        globalEventTarget.emit('该账号重复登录！')
+        setTimeout(() => {
+          this.disconnectServer()
+          director.loadScene('loginScene')
+        }, 2000);
       // Implement your kick logic here
     }
   
@@ -88,6 +105,7 @@ class PomeloClient__ {
       console.log(this.nHeartBeat);
       if (this.nHeartBeat > 70) {
         console.log('重连时间过长...请检查网络链接或重新登录!');
+        globalEventTarget.emit('showToast', '重连时间过长...请检查网络链接或重新登录!');
         this.clsInterval(this.s_timer);
         server.disconnect();
         window.location.reload();
@@ -110,53 +128,65 @@ class PomeloClient__ {
       });
     }
   
-    public conn(cb: (err: any, res: any) => void): boolean {
-      let host = 'pc2.th371.com' + '/conn2';
+    public conn(cb): any {
+      let host = 'pc2.th371.com'+"/conn2";;
       const _storage_user = SqlUtil.get('userinfo')
       const userInfo = JSON.parse(_storage_user)
-      console.log(userInfo)
+      console.log(_storage_user,"dddddddddddddddd")
     //  const userInfo = { userId: "", token: 'token', userType: '' };
   
       let msg = { uid: userInfo.userId };
-      let msg2 = { userId: userInfo.userId, token: userInfo.token, rType: '', roomId: '', player_type: userInfo.userType };
-  
-      this.p_server.init({ host: host, port: '', log: true }, () => {
-        this.p_server.request('gate.gateHandler.queryEntry', msg, (res: any) => {
-          this.p_server.disconnect();
+      let msg2 = { userId: userInfo.userId, token: userInfo.token, rType: '', roomId: userInfo.roomId , player_type:userInfo.userType};
+      console.log(msg2,"ttttttttttttttttttttttttttttttttttt")
+      let that = this
+      that.p_server.init({ host:host, port: ''},
+      function (num) {
+        console.log(num, "1111111111111111111 num ----------------->");
+        that.p_server.request("gate.gateHandler.queryEntry", msg, function (res) {
+         console.log(res,msg,"response22222222222222222222222******************")
+          that.p_server.disconnect();
           if (res.code == 200) {
-            let port = res.port;
-            if (port == '3010') {
-              host = 'pc2.th371.com' + '/conn4';
-            }
-            if (port == '3011') {
-              host = 'pc2.th371.com' + '/conn5';
-            }
-            if (port == '3012') {
-              host = 'pc2.th371.com' + '/conn6';
-            }
-            port = '';
-            this.p_server2.init({ host: host, port: port, log: true }, () => {
-              this.p_server2.request('connector.entryHandler.entry', msg2, (res: any) => {
-                if (res.code == 200) {
-                  this.isConn = false;
-                  this.clsInterval(this.interval);
-                  this.clsInterval(this.s_timer);
-                  this.startTimer();
-                  cb(res, res);
-                }
-              });
-            });
+          let port = res.port;
+        if(port== "3010" ) {
+          host = 'pc2.th371.com' + '/conn4';
           }
-        });
-      });
+          if(port=="3011") {
+            host = 'pc2.th371.com' + '/conn5';
+          }
+          if(port=="3012") {
+            host = 'pc2.th371.com' + '/conn6';
+          }
+          port = '';
+           console.log(port,"response ****************** 3333333333333333333333333")
+            that.p_server2.init({ host: host, port: port, log: true },function (res) {
+                that.p_server2.request("connector.entryHandler.entry", msg2, function (res) {
+              if (res.code == 200) {
+              that.isConn = false
+              that.clsInterval(that.interval);
+              that.clsInterval(that.s_timer);
+              that.startTimer();
+              cb(res,res);
+                }
+              })
+              }
+            )
+          }
+        })
+      }
+    )
   
       return this.isConn;
     }
 
-    public on(eventName: string, callback: Function, target?: any) {
-        // Add listener for your custom event
-        this.eventTarget.on(eventName, callback(), target);
-      }
+    public on(eventName: string, callback: (...args: any[]) => void, target?: any) {
+      // Add listener for your custom event
+      this.eventTarget.on(eventName, callback, target);
+  }
+  
+  public off(eventName: string, callback: (...args: any[]) => void, target?: any) {
+      // Remove listener for your custom event
+      this.eventTarget.off(eventName, callback, target);
+  }
   
     public disconnectServer() {
       this.clsInterval(this.interval);

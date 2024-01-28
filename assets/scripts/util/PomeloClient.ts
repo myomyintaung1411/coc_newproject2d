@@ -6,10 +6,10 @@ import { resources, log, JsonAsset } from 'cc';
 export class PomeloClient {
     static _instance: PomeloClient;
 
-    _connection: any = window.pomelo;
+    _connection: any = window.pomelo
 
     _ip: string = "pc2.th371.com";
-    _port: number = 3010;
+    _port: string = '';
 
     _disconnectCallback!: (msg: any) => void;
     _errorCallback!: (msg: any) => void;
@@ -26,17 +26,17 @@ export class PomeloClient {
         return this._instance;
     }
     /**
-     * 设置服务器地址
+     * 设置服务器地址 Set server address
      * @param ip 
      * @param port 
      */
-    public setServerAddress(ip: string, port: number) {
+    public setServerAddress(ip: string, port: string) {
         this._ip = ip;
         this._port = port;
     }
 
     /**
-     * 启动网络，只执行一次连接。
+     * 启动网络，只执行一次连接。 Start the network and perform only one connection.
      * @param errcb 
      * @param discb 
      * @param connectcb 
@@ -52,7 +52,7 @@ export class PomeloClient {
     }
 
     /**
-     * 初始化pomelo
+     * 初始化pomelo Initialize pomelo
      */
     private initPomeloClient(): void {
         // handle disconnect message, occours when the client is disconnect with servers
@@ -83,7 +83,7 @@ export class PomeloClient {
     }
 
     /**
-     * 发送消息
+     * 发送消息 Send a message
      * @param route 
      * @param msg 
      * @param cb 
@@ -97,7 +97,7 @@ export class PomeloClient {
     }
 
     /**
-     * 注册消息
+     * 注册消息 Register for news
      * @param route 
      * @param cb 
      */
@@ -108,7 +108,7 @@ export class PomeloClient {
         });
     }
     /**
-     * 取消监听
+     * 取消监听 Cancel monitoring
      * @param route 
      * @param cb 
      */

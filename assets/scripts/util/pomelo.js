@@ -2,6 +2,8 @@
 /**
  * Pomelo Browser Connector based on WebSocket
  */
+// const director = require('cc');
+
 (function (root, ByteArray) {
   /** Emitter **/
 
@@ -1269,9 +1271,11 @@
 	
 
 	if(this.data==undefined){
-		uni.navigateTo({
-			url:'/pages/pc/login/login'
-		})
+		// uni.navigateTo({
+		// 	url:'/pages/pc/login/login'
+		// })
+    //director.loadScene('loginScene')
+    //window.location.reload()
 		return;
 	}
     // compress message by protobuf
@@ -1488,3 +1492,5 @@
 
   /** end of Pomelo **/
 })(window, Uint8Array)
+
+window.pomelo = new Pomelo();

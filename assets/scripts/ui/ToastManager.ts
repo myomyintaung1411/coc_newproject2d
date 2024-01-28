@@ -1,44 +1,35 @@
-import { _decorator, Component, Prefab, instantiate, Node, Director } from 'cc';
-import { Toast } from './Toast';
+import { _decorator, Component, Prefab, instantiate, Node, Vec3 } from 'cc';
+import { NotificationToast } from './NotificationToast';
+import { globalEventTarget } from '../util/GlobalEventTarget';
+
 const { ccclass, property } = _decorator;
 
 @ccclass('ToastManager')
 export class ToastManager extends Component {
-
     @property(Prefab)
-    toastPrefab: Prefab | null = null;
+    toastPrefab: Prefab = null!;
 
     private static _instance: ToastManager | null = null;
 
-    public static get instance(): ToastManager {
+    onLoad() {
+        ToastManager._instance = this;
+
+        globalEventTarget.on('showToast', this.showToast, this);
+
+    }
+
+    static getInstance(): ToastManager {
         return ToastManager._instance!;
     }
 
-    onLoad() {
-        if (ToastManager._instance) {
-            this.node.destroy();
-            return;
-        }
-
-        ToastManager._instance = this;
-    }
-
-    onDestroy() {
-        if (ToastManager._instance === this) {
-            ToastManager._instance = null;
-        }
-    }
-
     showToast(message: string) {
-        if (this.toastPrefab) {
-            const toastNode = instantiate(this.toastPrefab) as Node;
-            this.node.addChild(toastNode);
-
-            const toastScript = toastNode.getComponent('Notification') as Toast;
-
-            if (toastScript) {
-                toastScript.show(message);
-            }
+        const toastNode = instantiate(this.toastPrefab);
+        const toastComponent = toastNode.getComponent(NotificationToast) as NotificationToast;
+        if (toastComponent) {
+            toastComponent.show(message);
         }
+
+        // Assuming this.node is the root node of your scene
+        this.node.addChild(toastNode);
     }
 }

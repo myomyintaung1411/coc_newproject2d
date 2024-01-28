@@ -13,7 +13,7 @@ export class LoginSceneMgr extends Component {
 
 
     update(deltaTime: number) {
-        
+           
     }
 
     onLoginMessage(data) {
