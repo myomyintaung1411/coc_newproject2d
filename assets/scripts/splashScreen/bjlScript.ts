@@ -4,6 +4,12 @@ import PomeloClient__ from '../util/test_pomelo';
 import { SqlUtil } from '../util/SqlUtil';
 import { ToastManager } from '../ui/ToastManager';
 import { encrypt, encrypt_data, getKey, getLz, getWlZps, setBjlData, setLhData, setNndata, setNnDtData, setresult } from '../common/release';
+import { bigRoad } from './bigRoad';
+import { zpsScript } from './zpsScript';
+import { sixsScript } from './sixsScript';
+import { dysScript } from './dysScript';
+import { xysScript } from './xysScript';
+import { xqsScript } from './xqsScript';
 
 const global = Global
 const { ccclass, property } = _decorator;
@@ -242,6 +248,18 @@ export class bjlScript extends Component {
 				hxh: any  =''
 				zdxh: any  =''
 				xdxh: any  =''
+               @property(bigRoad)
+               bigRoadComponent: bigRoad | null = null;
+               @property(zpsScript)
+               zpsRoadComponent: zpsScript | null = null;
+               @property(sixsScript)
+               sixsRoadComponent:sixsScript | null = null;
+               @property(dysScript)
+               dysRoadComponent:dysScript | null = null;
+               @property(xysScript)
+               xysRoadComponent:xysScript | null = null;
+               @property(xqsScript)
+               xqsRoadComponent:xqsScript | null = null;
 
     start() {
         SqlUtil.set('rType','bjl')
@@ -254,6 +272,14 @@ export class bjlScript extends Component {
     }
 
     protected onLoad(): void {
+        //const bigRoadNode = this.node.getChildByPath('BottomSection/LeftSection/LeftScrollView');
+        this.bigRoadComponent = this.bigRoadComponent?.getComponent('bigRoad') as bigRoad;
+        this.zpsRoadComponent = this.zpsRoadComponent?.getComponent('zpsScript') as zpsScript;
+        this.sixsRoadComponent = this.sixsRoadComponent?.getComponent('sixsScript') as sixsScript;
+        this.dysRoadComponent = this.dysRoadComponent?.getComponent('dysScript') as dysScript;
+        this.xysRoadComponent = this.xysRoadComponent?.getComponent('xysScript') as xysScript;
+        this.xqsRoadComponent = this.xqsRoadComponent?.getComponent('xqsScript') as xqsScript;
+      
         globalThis._bjlScript = this
         this.rid = Global.roomId
         console.log(this.rid,"roomId ***************")
@@ -290,6 +316,10 @@ export class bjlScript extends Component {
                     });
                 });				
             });
+
+            // if(this.gamedata) {
+            //     this.bigRoadComponent.createGrid(this.gamedata || null)
+            // }
 
     }
 
@@ -764,7 +794,15 @@ export class bjlScript extends Component {
         room.xqs = xqsArr; 
         room.jgzj = [z,x,h,zd,xd];
         that.gamedata = room;
-        
+        if(this.bigRoadComponent && this.zpsRoadComponent && this.sixsRoadComponent && this.dysRoadComponent && this.xysRoadComponent && this.xqsRoadComponent){ 
+            this.bigRoadComponent.createGrid(that.gamedata.lds)
+            this.zpsRoadComponent.createGrid(that.gamedata.zps)
+            this.sixsRoadComponent.createGrid(that.gamedata.sixs) 
+            this.dysRoadComponent.createGrid(that.gamedata.dys)  
+            this.xysRoadComponent.createGrid(that.gamedata.xys)  
+            this.xqsRoadComponent.createGrid(that.gamedata.xqs)  
+        }
+       /// globalThis._eventTarget.emit('newData',that.gamedata) //emitting data 
     }
 
     getMessage(message) {
@@ -921,6 +959,9 @@ export class bjlScript extends Component {
             this.cancelMoney();
             this.clearConfirm();
         }
+        // if(this.bigRoadComponent){
+        //     this.bigRoadComponent.createGrid(that.gamedata)
+        //  }
         return;
         }
         const isFirst  = false;
@@ -959,6 +1000,7 @@ export class bjlScript extends Component {
         
                 
         } 
+        //globalThis._eventTarget.emit('newData',this.gamedata) //emitting data 
     }
 
     getroomsZps(bjlganmedata){
