@@ -129,7 +129,7 @@ class PomeloClient__ {
     }
   
     public conn(cb): any {
-      let host = 'pc2.th371.com'+"/conn2";;
+      let host = 'pc2.th371.com'+"/conn2";
       const _storage_user = SqlUtil.get('userinfo')
       const userInfo = JSON.parse(_storage_user)
       console.log(_storage_user,"dddddddddddddddd")

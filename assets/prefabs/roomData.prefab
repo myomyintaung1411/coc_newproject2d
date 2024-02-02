@@ -1796,10 +1796,7 @@
     "scrollView": {
       "__id__": 50
     },
-    "gridPrefab2": {
-      "__uuid__": "9d9c4462-5334-474b-a3f5-2f8d23f34ae2",
-      "__expectedType__": "cc.Prefab"
-    },
+    "gridPrefab2": null,
     "_id": ""
   },
   {

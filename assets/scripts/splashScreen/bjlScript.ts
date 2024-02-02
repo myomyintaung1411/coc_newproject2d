@@ -1,4 +1,4 @@
-import { _decorator, Component, director, Node, sys } from 'cc';
+import { _decorator, Animation, Color, Component, director, Label, Node, resources, Sprite, SpriteFrame, sys } from 'cc';
 import { Global } from '../common/Globals';
 import PomeloClient__ from '../util/test_pomelo';
 import { SqlUtil } from '../util/SqlUtil';
@@ -261,6 +261,10 @@ export class bjlScript extends Component {
                @property(xqsScript)
                xqsRoadComponent:xqsScript | null = null;
 
+               @property(Node)
+               DisplayResult:Node = null!;
+               animationPlayed:boolean = false
+
     start() {
         SqlUtil.set('rType','bjl')
     }
@@ -391,6 +395,10 @@ export class bjlScript extends Component {
             this.exit();
         }
         
+    }
+
+    goBack() {
+        director.loadScene("testuiScene");
     }
 
     exit(){
@@ -803,6 +811,12 @@ export class bjlScript extends Component {
             this.xqsRoadComponent.createGrid(that.gamedata.xqs)  
         }
        /// globalThis._eventTarget.emit('newData',that.gamedata) //emitting data 
+       //
+    }
+
+    getImagePath(img){
+        console.log(img,"getImagepath ************")
+        return `poke/${img}/spriteFrame`;  // Adjust the path based on your image location
     }
 
     getMessage(message) {
@@ -959,12 +973,11 @@ export class bjlScript extends Component {
             this.cancelMoney();
             this.clearConfirm();
         }
-        // if(this.bigRoadComponent){
-        //     this.bigRoadComponent.createGrid(that.gamedata)
-        //  }
+        this.showImageResult()
         return;
         }
         const isFirst  = false;
+
         if(msg.action=='getdata'){
             
             if(msg.subMessage  && msg.subMessageTime!='' && msg.subMessage!='' && this.isSub=='2'){
@@ -1000,6 +1013,7 @@ export class bjlScript extends Component {
         
                 
         } 
+        
         //globalThis._eventTarget.emit('newData',this.gamedata) //emitting data 
     }
 
@@ -1201,6 +1215,302 @@ export class bjlScript extends Component {
         this.getChipByMoney();
     }
 
+    showImageResult() {
+        const { DisplayResult, gamedata, pCard, bCard, showResulta, bCount, pCount } = this;
+    
+        const WinNode = DisplayResult.getChildByPath('Win');
+        const winLabel = WinNode.getChildByName('Label');
+    
+        if (showResulta && (pCard.length > 0 || gamedata.resultType !== '' || bCard.length > 0)) {
+            DisplayResult.active = true;
+    
+            if (!this.animationPlayed) {
+                DisplayResult.getComponent(Animation).play();
+                this.animationPlayed = true;
+            }
+    
+            if (gamedata.isVip === '1') {
+                const setCardImage = (card, imgNode) => {
+                    const imgPath = this.getImagePath(card);
+                    resources.load(imgPath, SpriteFrame, (err, spriteFrame) => {
+                        if (!err) {
+                            imgNode.getComponent(Sprite).spriteFrame = spriteFrame;
+                        } else {
+                            console.error("Error loading image:", err);
+                        }
+                    });
+                };
+    
+                const setCardImages = (cards, imgNodes) => {
+                    cards.forEach((card, index) => {
+                        const imgNode = imgNodes[index];
+                        if (card && imgNode) {
+                            setCardImage(card, imgNode);
+                        } else {
+                            imgNode.active = false;
+                        }
+                    });
+                };
+    
+                const setPlayerCards = () => {
+                    const playerResNodes = [
+                        DisplayResult.getChildByPath('PlayerSection/PlayerRes1'),
+                        DisplayResult.getChildByPath('PlayerSection/PlayerRes2'),
+                        DisplayResult.getChildByPath('PlayerSection/PlayerRes3'),
+                    ];
+    
+                    setCardImages(pCard.slice(0, 3), playerResNodes);
+    
+                    const playerPoint = DisplayResult.getChildByPath('PlayerSection/Playerpoint').getComponent(Label);
+                    playerPoint.string = pCount;
+                };
+    
+                const setBankerCards = () => {
+                    const bankerResNodes = [
+                        DisplayResult.getChildByPath('BankerSection/BankerRes1'),
+                        DisplayResult.getChildByPath('BankerSection/BankerRes2'),
+                        DisplayResult.getChildByPath('BankerSection/BankerRes3'),
+                    ];
+    
+                    setCardImages(bCard.slice(0, 3), bankerResNodes);
+    
+                    const bankerPoint = DisplayResult.getChildByPath('BankerSection/BankerPoint').getComponent(Label);
+                    bankerPoint.string = bCount;
+                };
+    
+                setPlayerCards();
+                setBankerCards();
+            }
+    
+            const setColorAndText = (color, text) => {
+                WinNode.active = true;
+                winLabel.getComponent(Label).color = new Color(...color);
+                winLabel.getComponent(Label).string = `${gamedata.resultText}赢`;
+            };
+    
+            switch (gamedata.resultType) {
+                case 'x':
+                    setColorAndText([10, 114, 254], '赢');
+                    break;
+                case 'h':
+                    setColorAndText([1, 153, 68], '赢');
+                    break;
+                case 'z':
+                    setColorAndText([255, 61, 61], '赢');
+                    break;
+            }
+
+            // Check for bCard[2] and pCard[2] here
+            const Resut3Img = DisplayResult.getChildByPath('BankerSection/BankerRes3');
+            const p_Resut3Img = DisplayResult.getChildByPath('PlayerSection/PlayerRes3');
+            if (this.bCard[2]) {
+                Resut3Img.active = true;
+                const banker_imagepath3 = this.getImagePath(this.bCard[2]);
+                resources.load(banker_imagepath3, SpriteFrame, (err, spriteFrame) => {
+                    if (!err) {
+                        const banker_result3 = Resut3Img.getComponent(Sprite);
+                        if (banker_result3) {
+                            banker_result3.spriteFrame = spriteFrame;
+                        }
+                    } else {
+                        console.error("Error loading image:", err);
+                    }
+                });
+            } else {
+                Resut3Img.active = false;
+            }
+    
+            if (this.pCard[2]) {
+                p_Resut3Img.active = true;
+                const player_imagepath3 = this.getImagePath(this.pCard[2]);
+                resources.load(player_imagepath3, SpriteFrame, (err, spriteFrame) => {
+                    if (!err) {
+                        const player_result3 = p_Resut3Img.getComponent(Sprite);
+                        if (player_result3) {
+                            player_result3.spriteFrame = spriteFrame;
+                        }
+                    } else {
+                        console.error("Error loading image:", err);
+                    }
+                });
+            }  else {
+                p_Resut3Img.active = false
+            }
+
+        } else {
+            this.animationPlayed = false;
+            DisplayResult.active = false;
+            WinNode.active = false;
+    
+            const defaultSpriteFramePath = 'images/games/card/abg/spriteFrame';
+            const defaultSpriteFrame = resources.get<SpriteFrame>(defaultSpriteFramePath);
+    
+            ['BankerRes1', 'BankerRes2', 'BankerRes3', 'PlayerRes1', 'PlayerRes2', 'PlayerRes3'].forEach((resName) => {
+                const imgNode = DisplayResult.getChildByPath(`BankerSection/${resName}`) ||
+                                DisplayResult.getChildByPath(`PlayerSection/${resName}`);
+                const sprite = imgNode.getComponent(Sprite);
+                if (sprite) sprite.spriteFrame = defaultSpriteFrame;
+            });
+    
+        }
+    }
+    
+    
+
+    // showImageResult() {
+    //     const WinNode = this.DisplayResult.getChildByPath('Win')
+    //         const winLabel = WinNode.getChildByName('Label')
+    //     if(this.showResulta && (this.pCard.length>0 || this.gamedata.resultType!='' || this.bCard.length>0 )){
+    //         this.DisplayResult.active = true
+    //        // Check if the animation has already played
+    //             if (!this.animationPlayed) {
+    //                 this.DisplayResult.getComponent(Animation).play();
+    //                 this.animationPlayed = true;
+    //             }
+    //         if(this.gamedata.isVip == '1'){
+
+    //             const BankerPoint = this.DisplayResult.getChildByPath('BankerSection/BankerPoint')
+    //             const Resut1Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes1')
+    //             const Resut2Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes2')
+    //             const Resut3Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes3')
+
+    //             const PlayerPoint = this.DisplayResult.getChildByPath('PlayerSection/Playerpoint')
+    //             const p_Resut1Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes1')
+    //             const p_Resut2Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes2')
+    //             const p_Resut3Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes3')
+
+    //             const bankerPoint = BankerPoint.getComponent(Label)
+    //             const playerPoint = PlayerPoint.getComponent(Label)
+
+    //             const banker_result = Resut1Img.getComponent(Sprite)
+    //             const banker_result2 = Resut2Img.getComponent(Sprite)
+    //             const banker_result3 = Resut3Img.getComponent(Sprite)
+
+    //             const player_result = p_Resut1Img.getComponent(Sprite)
+    //             const player_result2 = p_Resut2Img.getComponent(Sprite)
+    //             const player_result3 = p_Resut3Img.getComponent(Sprite)
+
+    //            const banker_imagepath = this.getImagePath(this.bCard[0])
+    //            const banker_imagepath2 = this.getImagePath(this.bCard[1])
+              
+
+    //            const player_imagepath = this.getImagePath(this.pCard[0])
+    //            const player_imagepath2 = this.getImagePath(this.pCard[1])
+              
+
+    //           if(this.bCard[0]){
+    //             resources.load(banker_imagepath, SpriteFrame, (err, spriteFrame) => {
+    //                 if (!err) {
+    //                     banker_result.spriteFrame = spriteFrame;
+    //                 } else {
+    //                     console.error("Error loading image:", err);
+    //                 }
+    //             });
+    //           }
+
+    //            if(this.bCard[1]){
+    //             resources.load(banker_imagepath2, SpriteFrame, (err, spriteFrame) => {
+    //                 if (!err) {
+    //                     banker_result2.spriteFrame = spriteFrame;
+    //                 } else {
+    //                     console.error("Error loading image:", err);
+    //                 }
+    //             });
+    //            }
+
+    //           if(this.bCard[2]){
+    //             const banker_imagepath3 = this.getImagePath(this.bCard[2])
+    //             Resut3Img.active = true
+    //             resources.load(banker_imagepath3, SpriteFrame, (err, spriteFrame) => {
+    //                 if (!err) {
+    //                     banker_result3.spriteFrame = spriteFrame;
+    //                 } else {
+    //                     console.error("Error loading image:", err);
+    //                 }
+    //             });
+    //           } else{
+    //             Resut3Img.active = false
+    //           }
+
+    //           if(this.pCard[0]){
+    //             resources.load(player_imagepath, SpriteFrame, (err, spriteFrame) => {
+    //                 if (!err) {
+    //                     player_result.spriteFrame = spriteFrame;
+    //                 } else {
+    //                     console.error("Error loading image:", err);
+    //                 }
+    //             });
+    //           }
+
+    //           if(this.pCard[1]){
+    //             resources.load(player_imagepath2, SpriteFrame, (err, spriteFrame) => {
+    //                 if (!err) {
+    //                     player_result2.spriteFrame = spriteFrame;
+    //                 } else {
+    //                     console.error("Error loading image:", err);
+    //                 }
+    //             });
+    //           }
+
+    //           if(this.pCard[2]) {
+    //             const player_imagepath3 = this.getImagePath(this.pCard[2])
+    //             p_Resut3Img.active = true
+    //             resources.load(player_imagepath3, SpriteFrame, (err, spriteFrame) => {
+    //                 if (!err) {
+    //                     player_result3.spriteFrame = spriteFrame;
+    //                 } else {
+    //                     console.error("Error loading image:", err);
+    //                 }
+    //             });
+    //           } else{
+    //             p_Resut3Img.active = false
+    //           }
+
+    //           bankerPoint.string = this.bCount
+    //           playerPoint.string = this.pCount
+    //         }
+            
+    //         if(this.gamedata.resultType == 'x'){
+    //             WinNode.active = true
+    //             winLabel.getComponent(Label).color = new Color(10,114,254)
+    //             winLabel.getComponent(Label).string = this.gamedata.resultText + '赢'
+    //         }
+    //         if(this.gamedata.resultType == 'h'){
+    //             WinNode.active = true
+    //             winLabel.getComponent(Label).color = new Color(1,153,68)
+    //             winLabel.getComponent(Label).string = this.gamedata.resultText + '赢'
+    //         }
+    //         if(this.gamedata.resultType == 'z'){
+    //             WinNode.active = true
+    //             winLabel.getComponent(Label).color = new Color(255,61,61)
+    //             winLabel.getComponent(Label).string = this.gamedata.resultText + '赢'
+    //         }
+    //     }else {
+    //         // Reset animation state when condition is false
+    //         this.animationPlayed = false;
+    //         this.DisplayResult.active = false;
+    //         WinNode.active = false;
+    //         // Set default SpriteFrames for Banker and Player images
+    //         const defaultSpriteFramePath = 'images/games/card/abg/spriteFrame';  // Replace with the actual default path
+    //         const defaultSpriteFrame = resources.get<SpriteFrame>(defaultSpriteFramePath);
+
+    //         const Resut1Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes1');
+    //         const Resut2Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes2');
+    //         const Resut3Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes3');
+
+    //         const p_Resut1Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes1');
+    //         const p_Resut2Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes2');
+    //         const p_Resut3Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes3');
+
+    //         [Resut1Img, Resut2Img, Resut3Img, p_Resut1Img, p_Resut2Img, p_Resut3Img].forEach((image) => {
+    //             const sprite = image.getComponent(Sprite);
+    //             if (sprite) {
+    //                 sprite.spriteFrame = defaultSpriteFrame;
+    //             }
+    //         });
+    //     }
+    // }
+
     getChipByMoney(){
         const list = ['z','x','h','zd','xd','small','big'];
         for(let i in list){
@@ -1288,6 +1598,7 @@ export class bjlScript extends Component {
     clearConfirm(){
         const that = this;
         this.showResulta = false;
+        this.DisplayResult.active = false
         this.yl=0;
         this.gamedata.caic = null;
         this.gamedata.resultType  = '';

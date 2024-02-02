@@ -17,10 +17,6 @@ export class singelRoom extends Component {
     })
     scrollView: ScrollView = null!;
 
-    @property({
-        type: Prefab
-    })
-    gridPrefab2: Prefab = null!;
     numRows:number = 6
     numCols:number = 50
 
@@ -171,52 +167,6 @@ export class singelRoom extends Component {
     //     console.log(data)
     //     const content = this.scrollView.content;
 
-
-    // init(){
-       
-    //     this.itemSpace = 1
-    //     this.itemWH = Math.round(650/this.numItem)  //217
-    //     console.log(this.itemWH)
-    //     this.itemParentWidth = this.itemWH * this.numItem + this.itemSpace * (this.numItem + 1) //651 + 5 * 4
-    //     this.itemParentBg.getComponent(UITransform).width = this.itemParentWidth
-    //     this.itemParentBg.getComponent(UITransform).height = this.itemParentWidth
-    //     this.addItemBg()
-    // }
-   
-
-    //     // Loop to place images from data.zps
-    //     data.zps.forEach(dl => {
-    //         if (dl.col < this.numCols && dl.row <= this.numRows) {
-    //             let gridNode = content.children[dl.row * this.numCols + dl.col]; // Find the corresponding grid node
-    //             if (gridNode) {
-    //                 // Load the image dynamically from resources
-    //                 const imagePath = this.getImagePath(dl.row, dl.col, dl.img);
-    //                 resources.load(imagePath, SpriteFrame, (err, spriteFrame) => {
-    //                     if (!err) {
-    //                         let sprite = gridNode.getComponent(Sprite);
-    //                         if (!sprite) {
-    //                             sprite = gridNode.addComponent(Sprite);
-    //                         }
-    //                         spriteFrame.setOriginalSize(new Size(20,20))
-    //                         sprite.spriteFrame = spriteFrame;
-    //                         const width = sprite.node.getComponent(UITransform).width
-    //                           const height = sprite.node.getComponent(UITransform).height
-    //                           sprite.node.setScale(new Vec3(20 / width,20 /height))
-    //                         // Set the position of the gridNode based on dl.row and dl.col
-    //                         gridNode.setPosition(dl.col * 28,(dl.row - 1) * 28,0)
-    //                     } else {
-    //                         console.log("Error loading image:", err);
-    //                     }
-    //                 });
-    //             }
-    //         }
-    //     });
-
-        
-    // }
-
-
-
     getImagePath(row, col, img) {
         return `ndl/${img}/spriteFrame`;  // Adjust the path based on your image location
     }
@@ -229,47 +179,5 @@ export class singelRoom extends Component {
         
     }
 }
-
-
-// data.zps.forEach(dl => {
-        //     if (dl.col < 27) {
-        //         // Instantiate the grid node for each entry in data.zps
-        //         let gridNode = instantiate(this.gridPrefab2);
-        //         content.addChild(gridNode);
-    
-        //         // Create an image node for each entry in data.zps
-        //         let imageNode = new Node();
-        //         let uiTransform = imageNode.getComponent(UITransform);
-        //         if (!uiTransform) {
-        //             uiTransform = imageNode.addComponent(UITransform);
-        //         }
-        //         uiTransform.width = 20;
-        //         uiTransform.height = 20;
-                
-        //         imageNode.setPosition(new Vec3(0,0,0))
-        
-        //         let sprite = imageNode.addComponent(Sprite);
-    
-        //         const imagePath = this.getImagePath(dl.row, dl.col, dl.img);
-    
-        //         resources.load(imagePath, SpriteFrame, (err, spriteFrame) => {
-        //             if (!err) {
-        //                 spriteFrame.setOriginalSize(new Size(20,20))
-        //                 // spriteFrame.setRect(new cc.Rect(20, 20, 20, 20));
-        //                 sprite.spriteFrame = spriteFrame;
-        //                 const width = sprite.node.getComponent(UITransform).width
-        //                 const height = sprite.node.getComponent(UITransform).height
-        //                 sprite.node.setScale(new Vec3(20 / width,20 /height))
-        //                 console.log(sprite,"leeeeeeeeeee")
-        //                 // Add the image node to the grid node
-        //                 gridNode.addChild(imageNode);
-        //             } else {
-        //                 console.log("Error loading image:", err);
-        //             }
-        //         });
-        //             gridNode.setPosition(dl.col * 28,(dl.row - 1) * 28,0)
-        //             gridNode.setSiblingIndex(1)
-        //     }
-        // });
 
 

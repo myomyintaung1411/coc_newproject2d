@@ -15,5 +15,7 @@ export const Global = {
     noticePm:'',
     testLogin:600,
     roomList:[] ,
-    roomId:'',
+    roomId:'', //to use roomId in detailpage
+    gtype:'bjl'
+
 }

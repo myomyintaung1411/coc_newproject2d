@@ -1,10 +1,13 @@
 
-import { _decorator, Component, director, error, EventTarget, instantiate, Prefab, ScrollView, sys } from 'cc';
+import { _decorator, Component, director, error, EventTarget, instantiate, Node, Prefab, ScrollView, sys } from 'cc';
 import { roomData } from './roomData';
 import PomeloClient__ from '../util/test_pomelo';
 import { Global } from '../common/Globals';
 import { ToastManager } from '../ui/ToastManager';
 import { encrypt, encrypt_data, getKey, getLz, setNndata } from '../common/release';
+import { headerScript } from './headerScript';
+import { SqlUtil } from '../util/SqlUtil';
+import { roomData_Lh } from './roomData_Lh';
 const { ccclass, property } = _decorator;
 
 interface RoadMapItem {
@@ -17,10 +20,12 @@ interface RoadMapItem {
 @ccclass('testMainScript')
 export class testMainScript extends Component {
     private eventTarget: EventTarget = new EventTarget();
+    
 
-    @property(Prefab) marqueePrefab: Prefab = null!;
+     @property(Prefab) headerPrefab: Prefab;
 
     @property(ScrollView) roomDataScroll : ScrollView = null!;
+    @property(ScrollView) lh_roomDataScroll : ScrollView = null!;
 
     roadMapData:RoadMapItem[]  = []
 
@@ -50,7 +55,7 @@ export class testMainScript extends Component {
     websocket:boolean =null
     timerGetData:any =  null!//定时器名称
     rType:String ='bjl'
-    roomList:[]
+    roomList:any = []
     rows:6
     rowsNn:4
     cols:6
@@ -87,10 +92,22 @@ export class testMainScript extends Component {
     withdrawRecords:[]
     recordInfo:null
     userInfo:any = null!
+    private headerNode: Node = null; // Store a reference to the instantiated header node
 
+  //active color 9FBEB7
      onLoad(): void {
-        const marqueeNode = instantiate(this.marqueePrefab);
-        this.node.addChild(marqueeNode);
+        this.gtype = Global.gtype
+        if(this.gtype == 'bjl'){
+            this.roomDataScroll.node.active = true
+            this.lh_roomDataScroll.node.active = false
+        }
+        if(this.gtype == 'lh'){
+            this.lh_roomDataScroll.node.active = true
+            this.roomDataScroll.node.active = false
+        }
+        console.log('******************************* onLoad start work')
+        this.headerNode = instantiate(this.headerPrefab);
+        this.node.addChild(this.headerNode);
         this.getUserInfo()
         PomeloClient__.getInstance().on('message',this.getMessage,this)
         // this.eventTarget.on('message', this.getMessage)
@@ -120,13 +137,63 @@ export class testMainScript extends Component {
         // }, 1000);
     }
 
+    onTabClick(e,data) {
+        this.roomList = []
+       Global.roomList = []
+      console.log(data)
+      this.gtype = data
+      Global.gtype = data
+      if(data == 'bjl') {
+        this.roomDataScroll.node.active = true
+        this.lh_roomDataScroll.node.active = false
+       setTimeout(() => {
+        this.getRooms()
+       }, 2000);
+      }
+      if(data == 'lh'){
+        this.lh_roomDataScroll.node.active = true
+        this.roomDataScroll.node.active = false
+        setTimeout(() => {
+            this.getRooms()
+           }, 2000);
+      }
+    console.log(Global.roomList,"Global roomList ************")
+    }
+
+    getRooms() { 
+        
+        const userInfo = SqlUtil.get('userinfo')
+
+        let route = "bjl.bjlHandler.doSelectGame"; 
+        if(this.gtype=='lh'){
+            route = 'lh.lhHandler.doSelectGame';
+        }else if(this.gtype=='nn'){
+            route = 'nn.nnHandler.doSelectGame';
+        }
+        console.log(route,"route *********************")
+        // let routes = getCurrentPages(); // 获取当前打开过的页面路由数组 Get the currently opened page routing array
+        // let curRoute = routes[routes.length - 1].route
+        // if(curRoute=='pages/hh/pc/login/login'){
+        //     clearTimeout(that.timerGetGames);  
+        //     that.timerGetGames = null;
+        // }
+        
+        const msg = { userId: userInfo.userId, token: userInfo.token,rType:this.gtype,roomId:'',player_type:userInfo.userType}
+        PomeloClient__.getInstance().send(msg,route,(res)=> {
+            //uni.hideLoading();
+            this.roomList = []
+            this.setRoomData(res);
+        });
+    }
+
     start() {
         this.noticeShow()
-
-        // const roomDataComponent =  this.roomDataScroll.getComponent('roomData') as roomData
-        // if(roomDataComponent) {
-        //     roomDataComponent.setData(this.roadMapData)
-        // }
+       
+        const headerComponent = this.headerNode.getComponent('headerScript') as headerScript;
+        if (headerComponent) {
+            headerComponent.setUserData(this.userInfo);
+           
+        }
     }
 
     protected onDestroy(): void {
@@ -153,6 +220,8 @@ export class testMainScript extends Component {
     }
 
     setRoomData(dataStr){
+        this.roomList = []
+        Global.roomList = []
         //console.log(JSON.stringify(dataStr))
         const that = this;
         if(dataStr.code!=101){
@@ -160,7 +229,7 @@ export class testMainScript extends Component {
         }
         if(dataStr.data==''){
             this.roomList = [];
-            Global.roomList
+            Global.roomList = []
             return;
         }
         let roomList = dataStr.data.split("#");
@@ -458,14 +527,21 @@ export class testMainScript extends Component {
                 room.jgzj = [z,x,h,zd,xd];
                 newRoomList.push(room);
             //console.log("lzs---"+JSON.stringify(newRoomList));
-            //that.roomList = newRoomList;
+            that.roomList = newRoomList;
             Global.roomList = newRoomList
             //console.log(that.roomList, that.roomList.length,"roomList ********************")
         }
          const roomDataComponent =  this.roomDataScroll.getComponent('roomData') as roomData
-        if(roomDataComponent) {
-            roomDataComponent.setData(Global.roomList)
+      const lh_roomDataComponent =  this.lh_roomDataScroll.getComponent('roomData_Lh') as roomData_Lh
+         if(roomDataComponent && this.gtype == 'bjl') {
+             roomDataComponent.setData(that.roomList)
+         }
+        if(lh_roomDataComponent && this.gtype == 'lh') {
+            lh_roomDataComponent.setData(that.roomList)
         }
+
+       
+        
         //that.roomDataComponent.setData()
     }
 
@@ -546,8 +622,13 @@ export class testMainScript extends Component {
                         that.noticeContent = noticeArr[i].content
                     }else if(noticeArr[i].address=='1'){
                         Global.noticeContentLabel = noticeArr[i].content;
-                        that.noticePm = noticeArr[i].content;
-                        
+                        that.noticePm = noticeArr[i].content
+
+                        const headerComponent = this.headerNode.getComponent('headerScript') as headerScript;
+                        if (headerComponent) {
+                            headerComponent.setText(that.noticePm);
+                           
+                        }
                     }
                 }
                 

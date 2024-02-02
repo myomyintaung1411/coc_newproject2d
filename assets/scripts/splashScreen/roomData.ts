@@ -42,39 +42,40 @@ export class roomData extends Component {
 
     // Method to receive the data from the parent script
     setData(data:any) {
-        this.roadmapItem = Global.roomList;
+        this.roadmapItem = []
+        this.roadmapItem = data;
 
-        for (let data = 0; data < Global.roomList.length; data++) {
+        for (let data = 0; data < this.roadmapItem.length; data++) {
             let item = instantiate(this.itemPrefab);
             const labelNode = item.getChildByPath('Header/RoomName/Label');
             const AmountLabel = item.getChildByPath('Header/Amount');
             const timerLabel = item.getChildByPath('Header/Time');
             const singleRoomComponent = item.getComponent('singelRoom') as singelRoom
-            singleRoomComponent.createGrid(Global.roomList[data])
+            singleRoomComponent.createGrid(this.roadmapItem[data])
 
             if (labelNode && AmountLabel && timerLabel) {
                 const labelComponent = labelNode.getComponent(Label);
                 const labelAmount = AmountLabel.getComponent(Label)
                 const labelTime = timerLabel.getComponent(Label)
 
-                labelComponent.string = Global.roomList[data].name;
-                labelAmount.string = Global.roomList[data].xh;
-                //labelTime.string = Global.roomList[data].name;
+                labelComponent.string = this.roadmapItem[data].name;
+                labelAmount.string = this.roadmapItem[data].xh;
+                //labelTime.string = this.roadmapItem[data].name;
 
                 // Add timer for countdown
-                if (Global.roomList[data].zt == '1' && Global.roomList[data].djs > 0) {
+                if (this.roadmapItem[data].zt == '1' && this.roadmapItem[data].djs > 0) {
                     // Start the interval for countdown
-                    Global.roomList[data].timer = setInterval(() => {
-                        this.updateTimer(labelTime, Global.roomList[data]);
+                    this.roadmapItem[data].timer = setInterval(() => {
+                        this.updateTimer(labelTime, this.roadmapItem[data]);
                     }, 1000); // Interval of 1 second (1000 milliseconds)
 
                     // Store the interval ID for later cleanup
-                    this.timers.push(Global.roomList[data].timer);
+                    this.timers.push(this.roadmapItem[data].timer);
                 } else {
                     // Handle other conditions and label updates...
-                    if (Global.roomList[data].zt == '2') labelTime.string = '停止下注';
-                    if (Global.roomList[data].zt == '4') labelTime.string = '洗牌中';
-                    if (Global.roomList[data].zt == '3' || Global.roomList[data].zt == '5') labelTime.string = '结算中';
+                    if (this.roadmapItem[data].zt == '2') labelTime.string = '停止下注';
+                    if (this.roadmapItem[data].zt == '4') labelTime.string = '洗牌中';
+                    if (this.roadmapItem[data].zt == '3' || this.roadmapItem[data].zt == '5') labelTime.string = '结算中';
                  }
             }
             
