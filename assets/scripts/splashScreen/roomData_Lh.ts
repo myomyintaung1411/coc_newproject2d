@@ -41,6 +41,8 @@ export class roomData_Lh extends Component {
 
     // Method to receive the data from the parent script
     setData(data:any) {
+        this.scrollViewMain.content.removeAllChildren();
+
         this.roadmapItem = data;
 
         for (let data = 0; data < this.roadmapItem.length; data++) {

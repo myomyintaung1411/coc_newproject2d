@@ -1,4 +1,7 @@
-import { _decorator, Component, Label, Node, RichText, tween, Tween, v3 } from 'cc';
+import { _decorator, Component, Label, Node, Prefab, RichText, tween, Tween, v3,instantiate } from 'cc';
+import { UserMoneyInfo } from './UserMoneyInfo';
+import { kefuScript } from './kefuScript';
+import { Notification_Alert } from './Notification_Alert_Msg';
 const { ccclass, property } = _decorator;
 
 @ccclass('headerScript')
@@ -9,6 +12,9 @@ export class headerScript extends Component {
     @property(RichText) marqueeText: RichText = null!;
     @property(Node) marqueeParentNode :Node = null!
     public marqueeAnim:Tween<Node> = null!;
+
+    @property(Prefab) userMoneyInfoPrefab: Prefab = null!;
+
 
     start() {
 
@@ -41,6 +47,53 @@ export class headerScript extends Component {
         if (this.marqueeAnim) {
             this.marqueeAnim.stop();
         }
+    }
+
+    openUserInfoDialog() {
+        // Find the userMoneyInfoNode in the node hierarchy
+        const userMoneyInfoNode = this.node.parent?.getChildByName('UserMoneyInfoPrefab');
+
+        // Check if the node exists and has the UserMoneyInfo component
+        if (userMoneyInfoNode) {
+            const userMoneyInfoComponent = userMoneyInfoNode.getComponent('UserMoneyInfo') as UserMoneyInfo;
+            
+            // Check if the component exists and call the openDialog method
+            if (userMoneyInfoComponent) {
+                userMoneyInfoComponent.openDialog(this.amount.string);
+            }
+        }
+    }
+
+    openKefuDialog() {
+        // Find the kefunode in the node hierarchy
+        const kefuNode = this.node.parent?.getChildByName('KefuPrefab');
+
+        // Check if the node exists and has the UserMoneyInfo component
+        if (kefuNode) {
+            const kefuComponent = kefuNode.getComponent('kefuScript') as kefuScript;
+            
+            // Check if the component exists and call the openDialog method
+            if (kefuComponent) {
+                kefuComponent.openDialog();
+            }
+        }
+    }
+
+
+    openNotiDialog() {
+        console.log('click openNotiDialog')
+                // Find the kefunode in the node hierarchy
+                const notiNode = this.node.parent?.getChildByName('NotiPrefab');
+
+                // Check if the node exists and has the UserMoneyInfo component
+                if (notiNode) {
+                    const notiComponent = notiNode.getComponent('Notification_Alert') as Notification_Alert;
+                    
+                    // Check if the component exists and call the openDialog method
+                    if (notiComponent) {
+                        notiComponent.openDialog();
+                    }
+                }
     }
 
 

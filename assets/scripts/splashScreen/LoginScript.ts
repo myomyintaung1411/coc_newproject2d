@@ -8,6 +8,7 @@ import PomeloClient__ from '../util/test_pomelo';
 import { PomeloClient } from '../util/PomeloClient';
 import { ToastManager } from '../ui/ToastManager';
 import { Global } from '../common/Globals';
+import { LoadingManager } from '../util/LoadingManger';
 
 const { ccclass, property } = _decorator;
 
@@ -66,17 +67,20 @@ export class LoginScript extends Component {
         let passwordName = this.m_Password.getComponent(EditBox).string;
         // accountName = '79989911'
         // passwordName = '123aaa'
+
        if(accountName == '' || passwordName == '') { 
         return ToastManager.getInstance().showToast('Enter Username and Password!');
        }
 
        
 
+       LoadingManager.getInstance().showLoading()
         const md5_pass = md5(passwordName)
         const data = "01;"+accountName+";"+md5_pass+";"+"windows"+";1"; //data: 01;79989933;d78ff0ef526543e2174540afdfea0154;windows;1
        const resp =   await this.postData(url, {data:data});
        let userInfo = null
        if(resp.code == 200) {
+        LoadingManager.getInstance().hideLoading()
         userInfo = resp.data;
         userInfo.userType = 1
         userInfo.ye = userInfo.amount;
@@ -84,16 +88,17 @@ export class LoginScript extends Component {
          SqlUtil.set('userinfo',JSON.stringify(userInfo))
         
        }
-       
-      //const pomeloConn = new PomeloClient__()
-      PomeloClient__.getInstance().conn(res=> {
-        console.log(res,"ddddddddddddd")
-        if(res.code == '200') {
-            Global.isLogin = true
-            director.loadScene('testuiScene')
-        }
 
-       })
+      //const pomeloConn = new PomeloClient__()
+    //   PomeloClient__.getInstance().conn(res=> {
+        
+    //     console.log(res,"ddddddddddddd")
+    //     if(res.code == '200') {
+    //         Global.isLogin = true
+    //         director.loadScene('testuiScene')
+    //     }
+
+    //    })
     }
 }
 

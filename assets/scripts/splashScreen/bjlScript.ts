@@ -398,6 +398,12 @@ export class bjlScript extends Component {
     }
 
     goBack() {
+        SqlUtil.set('birid','')
+        PomeloClient__.getInstance().off('message',this.getMessage,this)
+        if(this.timerGetData) {
+            clearTimeout(this.timerGetData);  
+            this.timerGetData = null;  
+        } 
         director.loadScene("testuiScene");
     }
 
@@ -482,7 +488,7 @@ export class bjlScript extends Component {
         this.getChipByMoney1();
         
         room.xh = roomStr[1];
-        if(this.userInfo.level=='5' ){
+        if(this.userInfo?.level=='5' ){
             room.xh = roomStr[20];
         }
         

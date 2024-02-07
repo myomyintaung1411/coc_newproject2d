@@ -1,5 +1,5 @@
 
-import { _decorator, Component, director, error, EventTarget, instantiate, Node, Prefab, ScrollView, sys } from 'cc';
+import { _decorator, Component, director, error, EventTarget, instantiate, Node, Prefab, resources, ScrollView, Sprite, SpriteFrame, sys } from 'cc';
 import { roomData } from './roomData';
 import PomeloClient__ from '../util/test_pomelo';
 import { Global } from '../common/Globals';
@@ -8,6 +8,9 @@ import { encrypt, encrypt_data, getKey, getLz, setNndata } from '../common/relea
 import { headerScript } from './headerScript';
 import { SqlUtil } from '../util/SqlUtil';
 import { roomData_Lh } from './roomData_Lh';
+import { Notification_Alert } from './Notification_Alert_Msg';
+import getTradeRecord from '../util/utils';
+import { EncryptUtil } from '../util/EncryptUtil';
 const { ccclass, property } = _decorator;
 
 interface RoadMapItem {
@@ -21,11 +24,15 @@ interface RoadMapItem {
 export class testMainScript extends Component {
     private eventTarget: EventTarget = new EventTarget();
     
-
-     @property(Prefab) headerPrefab: Prefab;
-
+    @property(Prefab) userMoneyInfoPrefab: Prefab = null!;
+    @property(Prefab) ApplyWithdrawPrefab: Prefab = null!;
+    @property(Prefab) BetRecordPrefab:Prefab = null!;
+    @property(Prefab) headerPrefab: Prefab;
+    @property(Prefab) kefuPrefab: Prefab = null!;
+    @property(Prefab) NotiMessagePrefab:Prefab;
     @property(ScrollView) roomDataScroll : ScrollView = null!;
     @property(ScrollView) lh_roomDataScroll : ScrollView = null!;
+    
 
     roadMapData:RoadMapItem[]  = []
 
@@ -92,7 +99,10 @@ export class testMainScript extends Component {
     withdrawRecords:[]
     recordInfo:null
     userInfo:any = null!
+    private notiNode:Node = null;
     private headerNode: Node = null; // Store a reference to the instantiated header node
+    @property(Node) tabNode: Node = null!;  // Reference to the parent TabNode in the Cocos Creator editor
+    private userMoneyInfoNode : Node = null!;  // Reference to the parent TabNode in the Cocos Creator editor
 
   //active color 9FBEB7
      onLoad(): void {
@@ -105,9 +115,20 @@ export class testMainScript extends Component {
             this.lh_roomDataScroll.node.active = true
             this.roomDataScroll.node.active = false
         }
+        this.setActiveTabImage()
         console.log('******************************* onLoad start work')
         this.headerNode = instantiate(this.headerPrefab);
+        this.notiNode = instantiate(this.NotiMessagePrefab);
+        this.userMoneyInfoNode = instantiate(this.userMoneyInfoPrefab);
+        const ApplyWithdrawNode = instantiate(this.ApplyWithdrawPrefab);
+        const BetRecordNode = instantiate(this.BetRecordPrefab);
+        const kefuNode = instantiate(this.kefuPrefab);
         this.node.addChild(this.headerNode);
+        this.node.addChild(this.notiNode)
+        this.node.addChild(this.userMoneyInfoNode)
+        this.node.addChild(ApplyWithdrawNode)
+        this.node.addChild(BetRecordNode)
+        this.node.addChild(kefuNode)
         this.getUserInfo()
         PomeloClient__.getInstance().on('message',this.getMessage,this)
         // this.eventTarget.on('message', this.getMessage)
@@ -137,28 +158,72 @@ export class testMainScript extends Component {
         // }, 1000);
     }
 
-    onTabClick(e,data) {
-        this.roomList = []
-       Global.roomList = []
-      console.log(data)
-      this.gtype = data
-      Global.gtype = data
-      if(data == 'bjl') {
-        this.roomDataScroll.node.active = true
-        this.lh_roomDataScroll.node.active = false
-       setTimeout(() => {
-        this.getRooms()
-       }, 2000);
-      }
-      if(data == 'lh'){
-        this.lh_roomDataScroll.node.active = true
-        this.roomDataScroll.node.active = false
-        setTimeout(() => {
-            this.getRooms()
-           }, 2000);
-      }
-    console.log(Global.roomList,"Global roomList ************")
-    }
+
+        // Separate function to set active tab image
+        setActiveTabImage(activeTab: Node = null, inactiveTab: Node = null): void {
+            // If activeTab is not provided, determine it based on gtype
+            if (!activeTab) {
+                activeTab = this.gtype === 'bjl' ? this.tabNode.getChildByName('Tab1') : this.tabNode.getChildByName('Tab2');
+            }
+
+            // If inactiveTab is not provided, determine it based on gtype
+            if (!inactiveTab) {
+                inactiveTab = this.gtype === 'bjl' ? this.tabNode.getChildByName('Tab2') : this.tabNode.getChildByName('Tab1');
+            }
+
+            const activeSprite = activeTab.getComponent(Sprite);
+            const inactiveSprite = inactiveTab.getComponent(Sprite);
+
+            if (activeSprite) {
+                resources.load('texture/login/m_tab_sel/spriteFrame', SpriteFrame, (err, spriteFrame) => {
+                    if (!err) {
+                        activeSprite.spriteFrame = spriteFrame;
+                    } else {
+                        console.error("Error loading image:", err);
+                    }
+                });
+            }
+
+            if (inactiveSprite) {
+                // Clear sprite on inactive tab
+                inactiveSprite.spriteFrame = null;
+            }
+        }
+
+        onTabClick(e, data): void {
+            this.roomList = [];
+            Global.roomList = [];
+            console.log(data);
+            this.gtype = data;
+            Global.gtype = data;
+
+            // Assuming Tab1 and Tab2 are direct children of TabNode
+            const tab1 = this.tabNode.getChildByName('Tab1');
+            const tab2 = this.tabNode.getChildByName('Tab2');
+
+            if (data == 'bjl') {
+                this.setActiveTabImage(tab1, tab2);
+
+                this.roomDataScroll.node.active = true;
+                this.lh_roomDataScroll.node.active = false;
+                setTimeout(() => {
+                    this.getRooms();
+                }, 500);
+            }
+
+            if (data == 'lh') {
+                this.setActiveTabImage(tab2, tab1);
+
+                this.lh_roomDataScroll.node.active = true;
+                this.roomDataScroll.node.active = false;
+                setTimeout(() => {
+                    this.getRooms();
+                }, 500);
+            }
+
+            console.log(Global.roomList, "Global roomList ************");
+        }
+
 
     getRooms() { 
         
@@ -187,13 +252,24 @@ export class testMainScript extends Component {
     }
 
     start() {
-        this.noticeShow()
+        const that = this;
+        setTimeout(function () {
+            if( Global.isLogin){
+                Global.isLogin = false;
+                that.noticeShow()
+            }
+        }, 1000);
        
         const headerComponent = this.headerNode.getComponent('headerScript') as headerScript;
         if (headerComponent) {
             headerComponent.setUserData(this.userInfo);
            
         }
+        //api calling of bet record
+       // getTradeRecord()
+       if(Global.servicesLink == null){
+           this.getServerLink()
+       }
     }
 
     protected onDestroy(): void {
@@ -610,7 +686,8 @@ export class testMainScript extends Component {
 
     noticeShow(){
         const that = this;
-        this.showNotice = true;
+        //this.showNotice = true;
+        Global.showNotice = true;
         const userInfo = this.userInfo;
         const msg = {roomId:'',userId: userInfo.userId, token: userInfo.token,rType:that.gtype,player_type:userInfo.userType}
         PomeloClient__.getInstance().send(msg,'connector.entryHandler.getBulletin',res=> {
@@ -629,11 +706,72 @@ export class testMainScript extends Component {
                             headerComponent.setText(that.noticePm);
                            
                         }
+                        if(Global.showNotice == true) {
+                            const notiComponent = this.notiNode.getComponent('Notification_Alert') as Notification_Alert;
+                            if (notiComponent) {
+                                notiComponent.openDialog()
+                                notiComponent.setTextHere(Global.noticeContentLabel)
+                               
+                            }
+                        }
                     }
                 }
                 
             }
         });
+        
+    }
+
+
+    async fetchServiceLink(url: string, data: any) {
+        try {
+            const response = await fetch(url + '/call/get-services', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add any additional headers if needed
+                },
+                body: JSON.stringify(data),
+            });
+    
+            console.log(response, "leeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+    
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorMessage}`);
+            }
+    
+            const result = await response.text();
+            console.log('API response:', result);
+            return result;
+            // Handle the API response here
+    
+        } catch (error) {
+            console.error('Error:', error);
+            const r = EncryptUtil.aesDecrypt(error.message, '@hKe9@A1lKe9$Tz1kE@8HnG7', '1234567890123456');
+            console.log(error.message, r);
+            // showToast(error.message); // Show the error message in your toast
+            // Handle errors here
+        }
+    }
+
+    async  getServerLink(){//获取客服链接
+
+        const url = 'https://pc2.th371.com'
+        const _user = SqlUtil.get('userinfo')
+        const userInfo = JSON.parse(_user)
+         let dataParam={userId:userInfo.userId};
+        // const dataStr = {data: encryptTx( JSON.stringify(dataParam))};
+        // let resutlData = await fetchServerLink(dataStr);
+        // const r = txData(resutlData);
+        // const result = JSON.parse(r);
+        let enc =  JSON.stringify(dataParam)
+        const data = EncryptUtil.aesEncrypt((enc),'@hKe9@A1lKe9$Tz1kE@8HnG7','1234567890123456')
+        let resutlData = await this.fetchServiceLink(url, {data:data});
+        const r = EncryptUtil.aesDecrypt(resutlData,'@hKe9@A1lKe9$Tz1kE@8HnG7','1234567890123456')
+        const result = JSON.parse(r);
+        console.log(result,"servicelink ************")
+        Global.servicesLink = result.JsonData.services;
     }
 
 

@@ -16,6 +16,12 @@ export const Global = {
     testLogin:600,
     roomList:[] ,
     roomId:'', //to use roomId in detailpage
-    gtype:'bjl'
+    gtype:'bjl',
+    showNotice:false,
+
+    bet_recordInfo:null,
+    betGameRecord:null,
+
+    servicesLink:null, //kefu
 
 }

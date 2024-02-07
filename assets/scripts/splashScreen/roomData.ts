@@ -42,6 +42,8 @@ export class roomData extends Component {
 
     // Method to receive the data from the parent script
     setData(data:any) {
+        this.scrollViewMain.content.removeAllChildren();
+
         this.roadmapItem = []
         this.roadmapItem = data;
 

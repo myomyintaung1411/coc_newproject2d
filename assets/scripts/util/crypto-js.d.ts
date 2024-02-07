@@ -9,6 +9,8 @@ declare global {
             export function encrypt(message: string, key: string, cfg: { iv: string, mode: mode, padding: pad }): WordArray;
 
             export function decrypt(text: string, key: string, cfg: { iv: string, mode: mode, padding: pad }): WordArray;
+
+            
         }
 
         namespace enc {
@@ -26,4 +28,6 @@ declare global {
             Pkcs7
         }
     }
+
+    
 }
