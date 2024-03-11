@@ -34,10 +34,9 @@ export class singelRoom extends Component {
        this.node.setSiblingIndex(1)
     }
 
-
-
     show() {
     }
+
     clickRoom(data) {
         if(this.singleRoomData) {
             console.log(this.singleRoomData)

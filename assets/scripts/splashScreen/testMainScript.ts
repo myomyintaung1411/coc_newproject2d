@@ -25,6 +25,7 @@ export class testMainScript extends Component {
     private eventTarget: EventTarget = new EventTarget();
     
     @property(Prefab) userMoneyInfoPrefab: Prefab = null!;
+    @property(Prefab) documentationPrefab: Prefab = null!;
     @property(Prefab) ApplyWithdrawPrefab: Prefab = null!;
     @property(Prefab) BetRecordPrefab:Prefab = null!;
     @property(Prefab) headerPrefab: Prefab;
@@ -123,12 +124,14 @@ export class testMainScript extends Component {
         const ApplyWithdrawNode = instantiate(this.ApplyWithdrawPrefab);
         const BetRecordNode = instantiate(this.BetRecordPrefab);
         const kefuNode = instantiate(this.kefuPrefab);
+        const docuementNode = instantiate(this.documentationPrefab);
         this.node.addChild(this.headerNode);
         this.node.addChild(this.notiNode)
         this.node.addChild(this.userMoneyInfoNode)
         this.node.addChild(ApplyWithdrawNode)
         this.node.addChild(BetRecordNode)
         this.node.addChild(kefuNode)
+        this.node.addChild(docuementNode)
         this.getUserInfo()
         PomeloClient__.getInstance().on('message',this.getMessage,this)
         // this.eventTarget.on('message', this.getMessage)

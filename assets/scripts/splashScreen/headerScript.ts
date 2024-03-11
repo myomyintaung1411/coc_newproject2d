@@ -2,6 +2,7 @@ import { _decorator, Component, Label, Node, Prefab, RichText, tween, Tween, v3,
 import { UserMoneyInfo } from './UserMoneyInfo';
 import { kefuScript } from './kefuScript';
 import { Notification_Alert } from './Notification_Alert_Msg';
+import { Documentation } from './Documentation';
 const { ccclass, property } = _decorator;
 
 @ccclass('headerScript')
@@ -92,6 +93,21 @@ export class headerScript extends Component {
                     // Check if the component exists and call the openDialog method
                     if (notiComponent) {
                         notiComponent.openDialog();
+                    }
+                }
+    }
+    openDocumentDialog() {
+        console.log('click openDocumentDialog')
+                // Find the kefunode in the node hierarchy
+                const docuNode = this.node.parent?.getChildByName('DocumentationPrefab');
+
+                // Check if the node exists and has the UserMoneyInfo component
+                if (docuNode) {
+                    const documentComponent = docuNode.getComponent('Documentation') as Documentation;
+                    
+                    // Check if the component exists and call the openDialog method
+                    if (documentComponent) {
+                        documentComponent.openDialog();
                     }
                 }
     }

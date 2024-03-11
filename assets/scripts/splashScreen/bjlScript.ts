@@ -1,4 +1,4 @@
-import { _decorator, Animation, Color, Component, director, Label, Node, resources, Sprite, SpriteFrame, sys } from 'cc';
+import { _decorator, Animation, Color, Component, director, instantiate, Label, Layout, Node, Prefab, resources, ScrollView, Sprite, SpriteFrame, sys, UITransform } from 'cc';
 import { Global } from '../common/Globals';
 import PomeloClient__ from '../util/test_pomelo';
 import { SqlUtil } from '../util/SqlUtil';
@@ -16,7 +16,7 @@ const { ccclass, property } = _decorator;
 @ccclass('bjlScript')
 export class bjlScript extends Component {
  
-                 mouseIndex:any =5
+                mouseIndex:any =5
 				djs:any =30
 				noticePm:any = ''
 				showNotice:any = ''
@@ -64,72 +64,74 @@ export class bjlScript extends Component {
 				rowsNn:any = 4
 				colsNn:any = 50
 				live_address:any = ' https://sf1-hscdn-tos.pstatp.com/obj/media-fe/xgplayer_doc_video/flv/xgplayer-demo-360p.flv'
-				chipList: any =  [
+				@property(ScrollView) betImageScrollview : ScrollView = null!;
+                @property(Prefab) betImagePrefab:Prefab = null!;
+                chipList: any =  [
 					{
-						img: '/static/images/hh/pc/10.png',
+						img: 'chips/10/spriteFrame',
 						number: 10,
 					},
 					{
-						img: '/static/images/hh/pc/20.png',
+						img: 'chips/20/spriteFrame',
 						number: 20,
 					},
 					{
-						img: '/static/images/hh/pc/50.png',
+						img: 'chips/50/spriteFrame',
 						number: 50,
 					},
 					{
-						img: '/static/images/hh/pc/100.png',
+						img: 'chips/100/spriteFrame',
 						number: 100,
 						isShow:true,
 					},{
-						img: '/static/images/hh/pc/500.png',
+						img: 'chips/500/spriteFrame',
 						number: 500,
 						isShow:true,
 					}, {
-						img: '/static/images/hh/pc/1000.png',
+						img: 'chips/1000/spriteFrame',
 						number: 1000,
 						isShow:true,
 					}, {
-						img: '/static/images/hh/pc/5000.png',
+						img: 'chips/5000/spriteFrame',
 						number: 5000,
 						isShow:true,
 					}, {
-						img: '/static/images/hh/pc/10000.png',
+						img: 'chips/10000/spriteFrame',
 						number: 10000,
 						isShow:true,
 					}
 				]
 				chipLists: any =  [
 					{
-						img: '/static/images/hh/pc/10_s.png',
+						img: 'chips/10_s/spriteFrame',
 						number: 10,
 					},
 					{
-						img: '/static/images/hh/pc/20_s.png',
+						img: 'chips/20_s/spriteFrame',
 						number: 20,
 					},
 					{
-						img: '/static/images/hh/pc/50_s.png',
+						img: 'chips/50_s/spriteFrame',
 						number: 50,
 					},
 					{
-						img: '/static/images/hh/pc/100_s.png',
+						img: 'chips/100_s/spriteFrame',
 						number: 100,
 						isShow:true,
 					},{
-						img: '/static/images/hh/pc/500_s.png',
+						img: 'chips/500_s/spriteFrame',
 						number: 500,
 						isShow:true,
 					}, {
-						img: '/static/images/hh/pc/1000_s.png',
+						img: 'chips/1000_s/spriteFrame',
 						number: 1000,
 						isShow:true,
 					}, {
-						img: '/static/images/hh/pc/5000_s.png',
+						img: 'chips/5000_s/spriteFrame',
 						number: 5000,
 						isShow:true,
 					}, {
-						img: '/static/images/hh/pc/10000_s.png',
+						img: 'chips/10000_s/spriteFrame',
 						number: 10000,
 						isShow:true,
 					}
@@ -261,13 +263,131 @@ export class bjlScript extends Component {
                @property(xqsScript)
                xqsRoadComponent:xqsScript | null = null;
 
+               @property(Label) gameRoom : Label = null!;
+               @property(Label) gameRound : Label = null!;
+               @property(Label) gameCC : Label = null!;
+
+               @property(Node) PlayerPair : Node = null!;
+               @property(Node) Player : Node = null!;
+               @property(Node) Tie : Node = null!;
+               @property(Node) Banker : Node = null!;
+               @property(Node) BankerPair : Node = null!;
+               @property(Node) betPlaceSection:Node = null!;
+
+               @property(Node) YouWinDialog:Node = null!;
+
+               @property(Label) timerLabel:Label = null!;
+
                @property(Node)
                DisplayResult:Node = null!;
                animationPlayed:boolean = false
 
     start() {
         SqlUtil.set('rType','bjl')
+        this.betImageLoop()
     }
+
+    betImageLoop() {
+        const content = this.betImageScrollview.content;
+    
+        for (let index = 0; index < this.chipList.length; index++) {
+            const item = this.chipList[index];
+            let prefabNode = instantiate(this.betImagePrefab);
+            content.addChild(prefabNode);
+    
+            // Load sprite frame from resources
+            const imagePath = item.img;
+            resources.load(imagePath, SpriteFrame, (err, spriteFrame) => {
+                if (err) {
+                    console.error(`Failed to load sprite frame for ${imagePath}:`, err);
+                    return;
+                }
+    
+                // Set the loaded sprite frame to the sprite node in the prefab
+                const spriteNode = prefabNode.getComponentInChildren(Sprite);
+                if (spriteNode) {
+                    spriteNode.spriteFrame = spriteFrame;
+    
+                    // Check if the current prefab corresponds to the selected chipIndex
+                    if (index === this.chipIndex) {
+                        // Add background image or update style for the selected prefab
+                        const bgImagePath = 'texture/login/login-bg/spriteFrame';
+                        if (bgImagePath) {
+                            resources.load(bgImagePath, SpriteFrame, (bgErr, bgSpriteFrame) => {
+                                if (bgErr) {
+                                    console.error(`Failed to load background sprite frame for ${bgImagePath}:`, bgErr);
+                                    return;
+                                }
+    
+                                const spriteComponent = prefabNode.getComponent(Sprite);
+                                if (spriteComponent) {
+                                    spriteComponent.spriteFrame = bgSpriteFrame;
+                                }
+                            });
+                        }
+                    }
+                   
+                    spriteNode.node.on(Node.EventType.TOUCH_START, () => {
+                        this.handleChipClick(prefabNode, index);
+                    }, this);
+                } else {
+                    console.warn(`Sprite component not found in the prefab for ${imagePath}`);
+                }
+            });
+        }
+    }
+
+    handleChipClick(prefabNode, index) {
+        console.log('Chip clicked ******',index);
+        
+        // Clear previous selection
+        this.chipIndex = index;
+        this.clearSelection();
+      
+        // Add background image or update style for the selected prefab
+        const betImageNode = prefabNode;
+        if (betImageNode) {
+            // Add background image or update style
+            const bgImagePath = 'texture/login/login-bg/spriteFrame';
+            if (bgImagePath) {
+                resources.load(bgImagePath, SpriteFrame, (err, bgSpriteFrame) => {
+                    if (err) {
+                        console.error(`Failed to load background sprite frame for ${bgImagePath}:`, err);
+                        return;
+                    }
+    
+                    const spriteComponent = betImageNode.getComponent(Sprite);
+                    if (spriteComponent) {
+                        spriteComponent.spriteFrame = bgSpriteFrame;
+                    } else {
+                        console.warn(`Sprite component not found in the prefab for ${bgImagePath}`);
+                    }
+                });
+            }
+        }
+    }
+    
+    
+    
+    clearSelection() {
+        console.log('leeeeeeeeeeeee')
+        const content = this.betImageScrollview.content;
+        content.children.forEach(prefabNode => {
+            const betImageNode = prefabNode
+            if (betImageNode) {
+                const spriteComponent = betImageNode.getComponent(Sprite);
+                if (spriteComponent) {
+                    // Check if the current prefab corresponds to the selected chipIndex
+                    const index = content.children.indexOf(prefabNode);
+                    if (index !== this.chipIndex) {
+                        // Reset background image or style to the default state
+                        spriteComponent.spriteFrame = null; // or set it to the default sprite frame
+                    }
+                }
+            }
+        });
+    }
+
 
     setRoomId(roomId: number) {
         this.rid = roomId;
@@ -507,6 +627,7 @@ export class bjlScript extends Component {
         room.lsjg = roomStr[5];
         room.djs = roomStr[4];
         this.djs = Number(room.djs);
+
         room.zt = roomStr[3];
         room.pl = roomStr[14].split(":");
         if(room.zt=='1'){
@@ -521,6 +642,9 @@ export class bjlScript extends Component {
         }else {
             this.yl = 0 ;
             room.ztText = '洗牌中';
+           setTimeout(() => {
+            this.YouWinDialog.active = false
+           }, 500);
         }
         
         if(isStart){//首次加载视频 First time loading video
@@ -816,6 +940,13 @@ export class bjlScript extends Component {
             this.xysRoadComponent.createGrid(that.gamedata.xys)  
             this.xqsRoadComponent.createGrid(that.gamedata.xqs)  
         }
+        this.gameRoom.string = '桌台: ' + that.gamedata.name
+        this.gameRound.string = '局号: ' + that.gamedata.cc
+        this.gameCC.string = '限红: ' + that.gamedata.xh
+
+
+
+
        /// globalThis._eventTarget.emit('newData',that.gamedata) //emitting data 
        //
     }
@@ -953,6 +1084,24 @@ export class bjlScript extends Component {
                 userInfo.ye = msgData?.ye;
                 that.userInfo =userInfo;
                 SqlUtil.set('userinfo',userInfo)
+
+                
+        if(this.yl != 0){
+            this.YouWinDialog.active = true
+            const LayoutCompoent = this.YouWinDialog.getChildByName('Layout') 
+            const labelText1 = LayoutCompoent.getChildByName('Text1')?.getComponent(Label)
+            const labelText2 = LayoutCompoent.getChildByName('Text2')?.getComponent(Label)
+            if(this.yl >= 0){
+                labelText1.string = '您赢了'
+                labelText2.color = new Color(233, 25, 25,255)
+                labelText2.string = this.yl
+            }else {
+                labelText1.string = '您输了'
+                labelText2.color = new Color(112, 205, 32,255)
+                labelText2.string = this.yl  
+            }
+           }
+
             }else if(msg.code=="08"){//翻牌
                 if(that.gamedata.djs>0 ){
                     that.gamedata.djs = 0;
@@ -979,6 +1128,7 @@ export class bjlScript extends Component {
             this.cancelMoney();
             this.clearConfirm();
         }
+
         this.showImageResult()
         return;
         }
@@ -1221,6 +1371,304 @@ export class bjlScript extends Component {
         this.getChipByMoney();
     }
 
+    addMoney(e, data) {
+        if(this.gamedata.zt!='1') {
+            // uni.showToast({
+            //     icon:'error',
+            //     title:'非下注时间'//non-betting time
+            // })
+            ToastManager.getInstance().showToast('非下注时间!');
+            return;
+        }
+        this.playMusic('coin');
+        const money =Number(this.chipList[this.chipIndex].number);
+        const type = data;
+        
+        if(Number(this.gamedata.juh)>=0 && (type=='small' || type=='big' ) ){
+            return;
+        }
+        
+        let img = this.chipList[this.chipIndex].img;
+        if(type=='z'){
+            this.z_money = this.z_money + money;
+        }else if(type=='x'){
+            this.x_money = this.x_money + money;
+        }else if(type=='h'){
+            this.h_money = this.h_money + money; 
+        }else if(type=='zd'){
+            this.zd_money = this.zd_money + money;
+        }else if(type=='xd'){
+            this.xd_money = this.xd_money + money;
+        }else if(type=='small'){
+            this.small_money = this.small_money + money;
+        }else if(type=='big'){
+            this.big_money = this.big_money + money;
+        }
+        this.getChipByMoney();
+    }
+
+
+    getChipByMoney(){
+        const list = ['z','x','h','zd','xd','small','big'];
+        for(let i in list){
+            const type = list[i];
+            let money = Number( this[type+'_money'] )+Number( this[type+'_money_confirm'] );
+            let chipArr = [];
+            if(money>=10000){
+                money = money%10000;
+                chipArr.push(this.chipLists[7].img)
+            }
+            if(money>=5000){
+                money = money%5000;
+                chipArr.push(this.chipLists[6].img)
+            }
+            if(money>=1000){
+                money = money%1000;
+                chipArr.push(this.chipLists[5].img)
+            }
+            if(money>=500){
+                money = money%500;
+                chipArr.push(this.chipLists[4].img)
+            }
+            if(money>=100){
+                money = money%100;
+                chipArr.push(this.chipLists[3].img)
+            }
+            if(money>=50){
+                money = money%50;
+                chipArr.push(this.chipLists[2].img)
+            }
+            if(money>=20){
+                money = money%20;
+                chipArr.push(this.chipLists[1].img)
+            }
+            if(money>=10){
+                money = money%10;
+                chipArr.push(this.chipLists[0].img)
+            }
+            this[type+"ChipList"] = chipArr;
+        }
+
+        if((Number(this.xd_money)+Number(this.zd_money)+Number(this.h_money)+Number(this.z_money)+Number(this.x_money)+Number(this.big_money)+Number(this.small_money))>0){
+            this.betPlaceSection.active = true
+          }else{
+              this.betPlaceSection.active = false
+          }
+
+          const sections = [
+            { section: this.Player, betAmountSection: this.Player.getChildByName('BetAmount'), chipList: this.xChipList, money: this.x_money, moneyConfirm: this.x_money_confirm },
+            { section: this.Banker, betAmountSection: this.Banker.getChildByName('BetAmount'), chipList: this.zChipList, money: this.z_money, moneyConfirm: this.z_money_confirm },
+            { section: this.Tie, betAmountSection: this.Tie.getChildByName('BetAmount'), chipList: this.hChipList, money: this.h_money, moneyConfirm: this.h_money_confirm },
+            { section: this.PlayerPair, betAmountSection: this.PlayerPair.getChildByName('BetAmount'), chipList: this.xdChipList, money: this.xd_money, moneyConfirm: this.xd_money_confirm },
+            { section: this.BankerPair, betAmountSection: this.BankerPair.getChildByName('BetAmount'), chipList: this.zdChipList, money: this.zd_money, moneyConfirm: this.zd_money_confirm },
+            // Add more sections as needed
+        ];
+    
+        for (const { section, betAmountSection, chipList, money, moneyConfirm } of sections) {
+            this.showBetAmount_andImage(section, betAmountSection, chipList, money, moneyConfirm);
+        }
+
+        // const MoneySection = this.Player.getChildByName('MoneySection')
+        // const BetAmountSection = this.Player.getChildByName('BetAmount')
+        // if (MoneySection && BetAmountSection) {
+        // if((Number(this.x_money)+Number(this.x_money_confirm))>0) {
+        //     console.log(Number(this.x_money)+Number(this.x_money_confirm))
+        //     BetAmountSection.active = true
+        //     MoneySection.active = true
+        //       const labelNode = BetAmountSection.getChildByName('Label'); // Replace with the actual name of your label node
+        //       const labelComponent = labelNode.getComponent(Label);
+        //       labelComponent.string = this.x_money + this.x_money_confirm
+        //    if(MoneySection){
+        //     for (let index = 0; index < this.xChipList.length; index++) {
+        //         const imagePath = this.xChipList[index];
+        //         console.log(imagePath,"item *****************")
+    
+        //         resources.load(imagePath,SpriteFrame,(err,SpriteFrame) => {
+        //             if (err) {
+        //                 console.error(`Failed to load sprite frame for ${imagePath}:`, err);
+        //                 return;
+        //             }
+        //             // Create sprite node and add it as a child to MoneySection
+        //             const chipNode = new Node();
+        //                 const sprite = chipNode.addComponent(Sprite);
+        //             sprite.spriteFrame = SpriteFrame;
+        //                 // Position the chip nodes
+        //                 chipNode.setPosition(0, -7 * index);
+        //                 chipNode.getComponent(UITransform).setContentSize(50,50)
+        //                 // Add the sprite node to MoneySection
+        //             MoneySection.addChild(chipNode);
+        //         })
+        //       }
+        //    }
+
+        // } else {
+        //     //in here i want to clear all image
+        //     MoneySection.destroyAllChildren();
+        //     BetAmountSection.active = false
+        //     MoneySection.active = false
+        // }
+    //   }
+
+    }
+
+    getChipByMoney1(){
+        const list = ['z','x','h','zd','xd','small','big'];
+        for(let i in list){
+            const type = list[i];
+            let money = Number( this[type+'_money_confirm'] );
+            let chipArr = [];
+            if(money>=10000){
+                money = money%10000;
+                chipArr.push(this.chipLists[7].img)
+            }
+            if(money>=5000){
+                money = money%5000;
+                chipArr.push(this.chipLists[6].img)
+            }
+            if(money>=1000){
+                money = money%1000;
+                chipArr.push(this.chipLists[5].img)
+            }
+            if(money>=500){
+                money = money%500;
+                chipArr.push(this.chipLists[4].img)
+            }
+            if(money>=100){
+                money = money%100;
+                chipArr.push(this.chipLists[3].img)
+            }
+            if(money>=50){
+                money = money%50;
+                chipArr.push(this.chipLists[2].img)
+            }
+            if(money>=20){
+                money = money%20;
+                chipArr.push(this.chipLists[1].img)
+            }
+            if(money>=10){
+                money = money%10;
+                chipArr.push(this.chipLists[0].img)
+            }
+            this[type+"ChipList"] = chipArr;
+        }
+        if((Number(this.xd_money)+Number(this.zd_money)+Number(this.h_money)+Number(this.z_money)+Number(this.x_money)+Number(this.big_money)+Number(this.small_money))>0){
+            this.betPlaceSection.active = true
+          }else{
+              this.betPlaceSection.active = false
+          }
+
+          const sections = [
+            { section: this.Player, betAmountSection: this.Player.getChildByName('BetAmount'), chipList: this.xChipList, money: this.x_money, moneyConfirm: this.x_money_confirm },
+            { section: this.Banker, betAmountSection: this.Banker.getChildByName('BetAmount'), chipList: this.zChipList, money: this.z_money, moneyConfirm: this.z_money_confirm },
+            { section: this.Tie, betAmountSection: this.Tie.getChildByName('BetAmount'), chipList: this.hChipList, money: this.h_money, moneyConfirm: this.h_money_confirm },
+            { section: this.PlayerPair, betAmountSection: this.PlayerPair.getChildByName('BetAmount'), chipList: this.xdChipList, money: this.xd_money, moneyConfirm: this.xd_money_confirm },
+            { section: this.BankerPair, betAmountSection: this.BankerPair.getChildByName('BetAmount'), chipList: this.zdChipList, money: this.zd_money, moneyConfirm: this.zd_money_confirm },
+            // Add more sections as needed
+        ];
+    
+        for (const { section, betAmountSection, chipList, money, moneyConfirm } of sections) {
+            this.showBetAmount_andImage(section, betAmountSection, chipList, money, moneyConfirm);
+        }
+
+        //   const Player_MoneySection = this.Player.getChildByName('MoneySection')
+        //   const Player_BetAmountSection = this.Player.getChildByName('BetAmount')
+
+        //   const Banker_MoneySection = this.Banker.getChildByName('MoneySection')
+        //   const Banker_BetAmountSection = this.Banker.getChildByName('BetAmount')
+
+        //   const Tie_MoneySection = this.Tie.getChildByName('MoneySection')
+        //   const Tie_BetAmountSection = this.Tie.getChildByName('BetAmount')
+
+        //   if (Player_MoneySection && Player_BetAmountSection) {
+        //   if((Number(this.x_money)+Number(this.x_money_confirm))>0) {
+        //       console.log(Number(this.x_money)+Number(this.x_money_confirm))
+        //       Player_BetAmountSection.active = true
+        //       Player_MoneySection.active = true
+        //         const labelNode = Player_BetAmountSection.getChildByName('Label'); // Replace with the actual name of your label node
+        //         const labelComponent = labelNode.getComponent(Label);
+        //         labelComponent.string = this.x_money + this.x_money_confirm
+        //      if(Player_MoneySection){
+        //       for (let index = 0; index < this.xChipList.length; index++) {
+        //         const imagePath = this.xChipList[index];
+        //         console.log(imagePath,"item *****************")
+      
+        //           resources.load(imagePath,SpriteFrame,(err,SpriteFrame) => {
+        //               if (err) {
+        //                   console.error(`Failed to load sprite frame for ${imagePath}:`, err);
+        //                   return;
+        //               }
+        //               // Create sprite node and add it as a child to MoneySection
+        //               const chipNode = new Node();
+        //                   const sprite = chipNode.addComponent(Sprite);
+        //               sprite.spriteFrame = SpriteFrame;
+        //                   // Position the chip nodes
+        //                   chipNode.setPosition(0, -7 * index);
+        //                  chipNode.getComponent(UITransform).setContentSize(50,50)
+        //                   // Add the sprite node to MoneySection
+        //                   Player_MoneySection.addChild(chipNode);
+        //           })
+        //         }
+        //      }
+  
+        //   } else {
+        //     Player_MoneySection.destroyAllChildren();
+        //     Player_BetAmountSection.active = false
+        //       Player_MoneySection.active = false
+        //   }
+        // }
+
+    }
+
+    showBetAmount_andImage(section: Node, betAmountSection: Node, chipList: string[], money: number, moneyConfirm: number){
+        const moneySection = section.getChildByName('MoneySection');
+        const betAmountLabel = betAmountSection.getChildByName('Label')?.getComponent(Label);
+    
+        if (moneySection && betAmountLabel) {
+            const totalMoney = money + moneyConfirm;
+    
+            if (totalMoney > 0) {
+                betAmountSection.active = true;
+                moneySection.active = true;
+    
+                // Update the label
+                betAmountLabel.string = totalMoney.toString();
+    
+                // Clear existing images
+                moneySection.destroyAllChildren();
+    
+                // Load and add new images
+                for (let index = 0; index < chipList.length; index++) {
+                    const imagePath = chipList[index];
+    
+                    resources.load(imagePath, SpriteFrame, (err, SpriteFrame) => {
+                        if (err) {
+                            console.error(`Failed to load sprite frame for ${imagePath}:`, err);
+                            return;
+                        }
+    
+                        // Create sprite node and add it as a child to MoneySection
+                        const chipNode = new Node();
+                        const sprite = chipNode.addComponent(Sprite);
+                        sprite.spriteFrame = SpriteFrame;
+    
+                        // Position the chip nodes
+                        chipNode.setPosition(0, -2 * index);
+                        chipNode.getComponent(UITransform).setContentSize(40, 40);
+    
+                        // Add the sprite node to MoneySection
+                        moneySection.addChild(chipNode);
+                    });
+                }
+            } else {
+                // Clear all images
+                moneySection.destroyAllChildren();
+    
+                betAmountSection.active = false;
+                moneySection.active = false;
+            }
+        }
+    }
+
     showImageResult() {
         const { DisplayResult, gamedata, pCard, bCard, showResulta, bCount, pCount } = this;
     
@@ -1360,246 +1808,85 @@ export class bjlScript extends Component {
     
         }
     }
-    
-    
 
-    // showImageResult() {
-    //     const WinNode = this.DisplayResult.getChildByPath('Win')
-    //         const winLabel = WinNode.getChildByName('Label')
-    //     if(this.showResulta && (this.pCard.length>0 || this.gamedata.resultType!='' || this.bCard.length>0 )){
-    //         this.DisplayResult.active = true
-    //        // Check if the animation has already played
-    //             if (!this.animationPlayed) {
-    //                 this.DisplayResult.getComponent(Animation).play();
-    //                 this.animationPlayed = true;
-    //             }
-    //         if(this.gamedata.isVip == '1'){
+    filterArr(arr){
+        var str = '';
+        arr.filter((val,index)=>{
+            if(val>0){
+                let num = index+1;
+                if(str.length>0){
+                    str = str+'$'+num+"^"+val
+                }else{
+                    str = num+"^"+val
+                }
+            }
+        });
+        return str;
+    }
 
-    //             const BankerPoint = this.DisplayResult.getChildByPath('BankerSection/BankerPoint')
-    //             const Resut1Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes1')
-    //             const Resut2Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes2')
-    //             const Resut3Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes3')
-
-    //             const PlayerPoint = this.DisplayResult.getChildByPath('PlayerSection/Playerpoint')
-    //             const p_Resut1Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes1')
-    //             const p_Resut2Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes2')
-    //             const p_Resut3Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes3')
-
-    //             const bankerPoint = BankerPoint.getComponent(Label)
-    //             const playerPoint = PlayerPoint.getComponent(Label)
-
-    //             const banker_result = Resut1Img.getComponent(Sprite)
-    //             const banker_result2 = Resut2Img.getComponent(Sprite)
-    //             const banker_result3 = Resut3Img.getComponent(Sprite)
-
-    //             const player_result = p_Resut1Img.getComponent(Sprite)
-    //             const player_result2 = p_Resut2Img.getComponent(Sprite)
-    //             const player_result3 = p_Resut3Img.getComponent(Sprite)
-
-    //            const banker_imagepath = this.getImagePath(this.bCard[0])
-    //            const banker_imagepath2 = this.getImagePath(this.bCard[1])
-              
-
-    //            const player_imagepath = this.getImagePath(this.pCard[0])
-    //            const player_imagepath2 = this.getImagePath(this.pCard[1])
-              
-
-    //           if(this.bCard[0]){
-    //             resources.load(banker_imagepath, SpriteFrame, (err, spriteFrame) => {
-    //                 if (!err) {
-    //                     banker_result.spriteFrame = spriteFrame;
-    //                 } else {
-    //                     console.error("Error loading image:", err);
-    //                 }
-    //             });
-    //           }
-
-    //            if(this.bCard[1]){
-    //             resources.load(banker_imagepath2, SpriteFrame, (err, spriteFrame) => {
-    //                 if (!err) {
-    //                     banker_result2.spriteFrame = spriteFrame;
-    //                 } else {
-    //                     console.error("Error loading image:", err);
-    //                 }
-    //             });
-    //            }
-
-    //           if(this.bCard[2]){
-    //             const banker_imagepath3 = this.getImagePath(this.bCard[2])
-    //             Resut3Img.active = true
-    //             resources.load(banker_imagepath3, SpriteFrame, (err, spriteFrame) => {
-    //                 if (!err) {
-    //                     banker_result3.spriteFrame = spriteFrame;
-    //                 } else {
-    //                     console.error("Error loading image:", err);
-    //                 }
-    //             });
-    //           } else{
-    //             Resut3Img.active = false
-    //           }
-
-    //           if(this.pCard[0]){
-    //             resources.load(player_imagepath, SpriteFrame, (err, spriteFrame) => {
-    //                 if (!err) {
-    //                     player_result.spriteFrame = spriteFrame;
-    //                 } else {
-    //                     console.error("Error loading image:", err);
-    //                 }
-    //             });
-    //           }
-
-    //           if(this.pCard[1]){
-    //             resources.load(player_imagepath2, SpriteFrame, (err, spriteFrame) => {
-    //                 if (!err) {
-    //                     player_result2.spriteFrame = spriteFrame;
-    //                 } else {
-    //                     console.error("Error loading image:", err);
-    //                 }
-    //             });
-    //           }
-
-    //           if(this.pCard[2]) {
-    //             const player_imagepath3 = this.getImagePath(this.pCard[2])
-    //             p_Resut3Img.active = true
-    //             resources.load(player_imagepath3, SpriteFrame, (err, spriteFrame) => {
-    //                 if (!err) {
-    //                     player_result3.spriteFrame = spriteFrame;
-    //                 } else {
-    //                     console.error("Error loading image:", err);
-    //                 }
-    //             });
-    //           } else{
-    //             p_Resut3Img.active = false
-    //           }
-
-    //           bankerPoint.string = this.bCount
-    //           playerPoint.string = this.pCount
-    //         }
+    confirmMoney(){
+        const that = this;
+        // const cc = this.gamedata.cc;
+        //闲，闲对，和，庄对，庄,大,小
+        let newarr = [this.z_money,this.h_money,this.x_money,this.zd_money,this.xd_money,this.big_money,this.small_money]; 
+        let __user = SqlUtil.get('userinfo')
+        let userInfo = JSON.parse(__user)
+        const bet = this.filterArr(newarr);
+        const msg = {roomId:this.rid,bet:bet,userId: userInfo.userId, token: userInfo.token,rType:that.gtype,player_type:userInfo.userType}
+        PomeloClient__.getInstance().send(msg,'bjl.bjlHandler.doBet',res=> {
             
-    //         if(this.gamedata.resultType == 'x'){
-    //             WinNode.active = true
-    //             winLabel.getComponent(Label).color = new Color(10,114,254)
-    //             winLabel.getComponent(Label).string = this.gamedata.resultText + '赢'
-    //         }
-    //         if(this.gamedata.resultType == 'h'){
-    //             WinNode.active = true
-    //             winLabel.getComponent(Label).color = new Color(1,153,68)
-    //             winLabel.getComponent(Label).string = this.gamedata.resultText + '赢'
-    //         }
-    //         if(this.gamedata.resultType == 'z'){
-    //             WinNode.active = true
-    //             winLabel.getComponent(Label).color = new Color(255,61,61)
-    //             winLabel.getComponent(Label).string = this.gamedata.resultText + '赢'
-    //         }
-    //     }else {
-    //         // Reset animation state when condition is false
-    //         this.animationPlayed = false;
-    //         this.DisplayResult.active = false;
-    //         WinNode.active = false;
-    //         // Set default SpriteFrames for Banker and Player images
-    //         const defaultSpriteFramePath = 'images/games/card/abg/spriteFrame';  // Replace with the actual default path
-    //         const defaultSpriteFrame = resources.get<SpriteFrame>(defaultSpriteFramePath);
-
-    //         const Resut1Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes1');
-    //         const Resut2Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes2');
-    //         const Resut3Img = this.DisplayResult.getChildByPath('BankerSection/BankerRes3');
-
-    //         const p_Resut1Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes1');
-    //         const p_Resut2Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes2');
-    //         const p_Resut3Img = this.DisplayResult.getChildByPath('PlayerSection/PlayerRes3');
-
-    //         [Resut1Img, Resut2Img, Resut3Img, p_Resut1Img, p_Resut2Img, p_Resut3Img].forEach((image) => {
-    //             const sprite = image.getComponent(Sprite);
-    //             if (sprite) {
-    //                 sprite.spriteFrame = defaultSpriteFrame;
-    //             }
-    //         });
-    //     }
-    // }
-
-    getChipByMoney(){
-        const list = ['z','x','h','zd','xd','small','big'];
-        for(let i in list){
-            const type = list[i];
-            let money = Number( this[type+'_money'] )+Number( this[type+'_money_confirm'] );
-            let chipArr = [];
-            if(money>=10000){
-                money = money%10000;
-                chipArr.push(this.chipLists[7].img)
+            if(res.code=='401'){
+                ToastManager.getInstance().showToast(res.msg);
+                that.repeatArr = newarr;
+                that.setHistoryBet();
+                userInfo.ye = res.data.ye;
+                that.userInfo =userInfo;
+                // uni.setStorageSync("userInfo",userInfo);
+                SqlUtil.set('userinfo',userInfo);
+            }else{
+                ToastManager.getInstance().showToast(res.msg);
             }
-            if(money>=5000){
-                money = money%5000;
-                chipArr.push(this.chipLists[6].img)
-            }
-            if(money>=1000){
-                money = money%1000;
-                chipArr.push(this.chipLists[5].img)
-            }
-            if(money>=500){
-                money = money%500;
-                chipArr.push(this.chipLists[4].img)
-            }
-            if(money>=100){
-                money = money%100;
-                chipArr.push(this.chipLists[3].img)
-            }
-            if(money>=50){
-                money = money%50;
-                chipArr.push(this.chipLists[2].img)
-            }
-            if(money>=20){
-                money = money%20;
-                chipArr.push(this.chipLists[1].img)
-            }
-            if(money>=10){
-                money = money%10;
-                chipArr.push(this.chipLists[0].img)
-            }
-            this[type+"ChipList"] = chipArr;
-        }
+            that.cancelMoney();  // 不清空 重复下注 Do not clear, repeat bet
+        });
     }
 
-    getChipByMoney1(){
-        const list = ['z','x','h','zd','xd','small','big'];
-        for(let i in list){
-            const type = list[i];
-            let money = Number( this[type+'_money_confirm'] );
-            let chipArr = [];
-            if(money>=10000){
-                money = money%10000;
-                chipArr.push(this.chipLists[7].img)
-            }
-            if(money>=5000){
-                money = money%5000;
-                chipArr.push(this.chipLists[6].img)
-            }
-            if(money>=1000){
-                money = money%1000;
-                chipArr.push(this.chipLists[5].img)
-            }
-            if(money>=500){
-                money = money%500;
-                chipArr.push(this.chipLists[4].img)
-            }
-            if(money>=100){
-                money = money%100;
-                chipArr.push(this.chipLists[3].img)
-            }
-            if(money>=50){
-                money = money%50;
-                chipArr.push(this.chipLists[2].img)
-            }
-            if(money>=20){
-                money = money%20;
-                chipArr.push(this.chipLists[1].img)
-            }
-            if(money>=10){
-                money = money%10;
-                chipArr.push(this.chipLists[0].img)
-            }
-            this[type+"ChipList"] = chipArr;
+  
+
+    setHistoryBet(){
+        //确认下注 Confirm bet
+        if(this.x_money>0){
+            SqlUtil.set(this.ridStr+'x_money_confirm',this.x_money+this.x_money_confirm);
+            this.x_money_confirm = this.x_money+this.x_money_confirm;
         }
+        if(this.z_money>0){
+            SqlUtil.set(this.ridStr+'z_money_confirm',this.z_money+this.z_money_confirm);
+            this.z_money_confirm = this.z_money+this.z_money_confirm;
+        }
+        if(this.h_money>0){
+            SqlUtil.set(this.ridStr+'h_money_confirm',this.h_money+this.h_money_confirm);
+            this.h_money_confirm = this.h_money+this.h_money_confirm;
+        }
+        if(this.zd_money>0){
+            SqlUtil.set(this.ridStr+'zd_money_confirm',this.zd_money+this.zd_money_confirm);
+            this.zd_money_confirm = this.zd_money+this.zd_money_confirm;
+        }
+        if(this.xd_money>0){
+            SqlUtil.set(this.ridStr+'xd_money_confirm',this.xd_money+this.xd_money_confirm);
+            this.xd_money_confirm = this.xd_money+this.xd_money_confirm;
+        }
+        if(this.big_money>0){
+            SqlUtil.set(this.ridStr+'big_money_confirm',this.big_money+this.big_money_confirm);
+            this.big_money_confirm = this.big_money+this.big_money_confirm;
+        }
+        if(this.small_money>0){
+            SqlUtil.set(this.ridStr+'small_money_confirm',this.small_money+this.small_money_confirm);
+            this.small_money_confirm = this.small_money+this.small_money_confirm;
+        }
+        this.getChipByMoney1();
     }
+    
+
+
 
     clearConfirm(){
         const that = this;
@@ -1607,6 +1894,7 @@ export class bjlScript extends Component {
         this.DisplayResult.active = false
         this.yl=0;
         this.gamedata.caic = null;
+        this.YouWinDialog.active = false
         this.gamedata.resultType  = '';
         this.bCard = [];
         this.pCard = [];
@@ -1637,12 +1925,20 @@ export class bjlScript extends Component {
         
         this.timerGetData = setInterval(() => {
             that.gamedata.djs--;
+
             that.djsTimer();
         }, 1000);
-        
+
     }
 
     djsTimer(){
+        if(this.gamedata.djs<=0){
+            this.timerLabel.fontSize = 20
+            this.timerLabel.string =  this.gamedata.ztText
+       }else {
+           this.timerLabel.fontSize = 50
+           this.timerLabel.string =  this.gamedata.djs
+       }
         if(this.gamedata.djs<11 && this.gamedata.djs>0){
             this.playWav(this.gamedata.djs);
         }

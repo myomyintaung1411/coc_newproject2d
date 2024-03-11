@@ -80,7 +80,7 @@ export class LoginScript extends Component {
        const resp =   await this.postData(url, {data:data});
        let userInfo = null
        if(resp.code == 200) {
-        LoadingManager.getInstance().hideLoading()
+       
         userInfo = resp.data;
         userInfo.userType = 1
         userInfo.ye = userInfo.amount;
@@ -89,16 +89,15 @@ export class LoginScript extends Component {
         
        }
 
-      //const pomeloConn = new PomeloClient__()
-    //   PomeloClient__.getInstance().conn(res=> {
-        
-    //     console.log(res,"ddddddddddddd")
-    //     if(res.code == '200') {
-    //         Global.isLogin = true
-    //         director.loadScene('testuiScene')
-    //     }
+      PomeloClient__.getInstance().conn(res=> {
+        LoadingManager.getInstance().hideLoading()
+        console.log(res,"ddddddddddddd")
+        if(res.code == '200') {
+            Global.isLogin = true
+            director.loadScene('testuiScene')
+        }
 
-    //    })
+       })
     }
 }
 

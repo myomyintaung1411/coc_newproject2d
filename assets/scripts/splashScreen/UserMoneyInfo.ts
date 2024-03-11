@@ -6,6 +6,7 @@ import PomeloClient__ from '../util/test_pomelo';
 import { getBjJg, getBjlWin, getLhJg, getLhWin, getNnWin } from '../common/release';
 import { Global } from '../common/Globals';
 import getTradeRecord from '../util/utils';
+import { LoadingManager } from '../util/LoadingManger';
 
 const { ccclass, property } = _decorator;
 
@@ -55,8 +56,9 @@ export class UserMoneyInfo extends Component {
        
         // Find the userMoneyInfoNode in the node hierarchy
         getTradeRecord()
+        LoadingManager.getInstance().showLoading()
         const betRecordNode = this.node.parent?.getChildByName('BetRecordPrefab');
-
+         
         // Check if the node exists and has the UserMoneyInfo component
         if (betRecordNode) {
             const betRecordComponent = betRecordNode.getComponent('betRecordDialog') as betRecordDialog;
@@ -65,6 +67,7 @@ export class UserMoneyInfo extends Component {
             if (betRecordComponent) {
                setTimeout(() => {
                 betRecordComponent.openDialog();
+                LoadingManager.getInstance().hideLoading()
                }, 6000);
             }
         }

@@ -3611,6 +3611,10 @@
       "__uuid__": "a90b5fdf-6b5c-439b-a83c-54d9f55e2f7b",
       "__expectedType__": "cc.Prefab"
     },
+    "documentationPrefab": {
+      "__uuid__": "93d44c1b-7182-4616-a126-1b88ab464293",
+      "__expectedType__": "cc.Prefab"
+    },
     "ApplyWithdrawPrefab": {
       "__uuid__": "d4fc320c-f053-4881-99fc-e3ff1fcd44fa",
       "__expectedType__": "cc.Prefab"
